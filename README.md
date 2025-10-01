@@ -1,50 +1,70 @@
-# ProtSpaM (Versión Secuencial en C++)
+# ProtSpaM (Sequential Version in C++)
 
-Esta es una adaptación **secuencial** de [ProtSpaM](https://github.com/jschellh/ProtSpaM), una herramienta para estimar distancias filogenéticas entre proteínas basada en **spaced-word matches**.  
+This is a **sequential** adaptation of [ProtSpaM](https://github.com/jschellh/ProtSpaM), a tool for estimating phylogenetic distances between proteins based on **spaced-word matches**.  
 
-La versión original incluye paralelismo con **OpenMP**.  
-Esta versión elimina toda la paralelización para ejecutarse de manera **estrictamente secuencial**, manteniendo la misma funcionalidad principal.  
-
----
-
-## ✨ Cambios respecto a la versión original
-- Se creó un archivo `main_sequential.cpp` en lugar del `main.cpp` original.  
-- Se eliminaron las dependencias de **OpenMP** (`#include <omp.h>`, `omp_get_wtime`, `omp_set_num_threads`, `#pragma omp parallel for`).  
-- El sistema de medición de tiempo ahora utiliza `std::chrono` en lugar de funciones de OpenMP.  
-- El parámetro `-t` (número de hilos) se borra ya que no es necesari para un codigo secuencial.  
+The original version includes parallelism with **OpenMP**.  
+This version removes all parallelization to run in a **strictly sequential** manner, while keeping the same core functionality.  
 
 ---
 
-## 🔧 Compilación
-Asegúrate de tener un compilador compatible con **C++11 o superior** (por ejemplo `g++` o `clang++`).  
+## ✨ Changes Compared to the Original Version
+- A new file `main_sequential.cpp` was created instead of the original `main.cpp`.  
+- Removed all **OpenMP** dependencies (`#include <omp.h>`, `omp_get_wtime`, `omp_set_num_threads`, `#pragma omp parallel for`).  
+- The timing system now uses `std::chrono` instead of OpenMP functions.  
+- The `-t` parameter (number of threads) was removed since it is not needed in sequential code.  
+
+---
+
+## 🔧 Compilation
+Make sure you have a compiler compatible with **C++11 or later** (e.g., `g++` or `clang++`).  
 
 ```bash
 g++ -std=c++11 -O3 -o protspam_sequential main_sequential.cpp *.cpp
-
-### 📂 Uso
-El programa acepta los mismos parámetros que la versión original.  
-
-Ejemplo de uso con múltiples archivos de entrada:
-
-```bash
-./protspam_sequential -w 6 -d 40 -m 5 -l input_files.txt -o DMat
-
-
-### ⚙️ Opciones principales
-- `-w <int>` : Peso del patrón (**default:** 6)  
-- `-d <int>` : Número de posiciones "don't-care" (**default:** 40)  
-- `-s <int>` : Puntaje mínimo para considerar un spaced-word match como homólogo (**default:** 0)  
-- `-m <int>` : Número de patrones (**default:** 5)  
-- `-o <file>` : Nombre del archivo de salida con la matriz de distancias (**default:** DMat)  
-- `-l <file>` : Lista de archivos de entrada en formato multifasta  
-- `-p <file>` : Cargar conjunto de patrones predefinidos  
-- `-z` : Guardar patrones generados en `patterns.txt`  
-- `-r` : Generar puntajes individuales para cada par de secuencias (spamogramas)  
+```
 
 ---
 
-### 📊 Salida
-El programa genera los siguientes resultados:  
-- **Matriz de distancias** → archivo de salida (`DMat` por defecto).  
-- **Patrones generados** → en `patterns.txt` si se usa la opción `-z`.  
-- **Spamogramas (scores)** → en el directorio `scores/` si se usa la opción `-r`.  
+## 📂 Usage
+
+The program accepts the same parameters as the original version.
+
+Example with multiple input files:
+
+```bash
+./protspam_sequential -w 6 -d 40 -m 5 -l input_files.txt -o DMat
+```
+
+---
+## ⚙️ Main Options
+
+```bash
+-w <int> : Pattern weight (default: 6)
+
+-d <int> : Number of “don’t-care” positions (default: 40)
+
+-s <int> : Minimum score to consider a spaced-word match as homologous (default: 0)
+
+-m <int> : Number of patterns (default: 5)
+
+-o <file> : Name of the output file containing the distance matrix (default: DMat)
+
+-l <file> : List of input files in multifasta format
+
+-p <file> : Load a predefined pattern set
+
+-z : Save generated patterns into patterns.txt
+
+-r : Generate individual scores for each sequence pair (spamograms)
+```
+
+---
+## 📊 Output
+The program produces the following results:
+
+- Distance matrix → output file (DMat by default).
+- Generated patterns → saved in patterns.txt if the -z option is used.
+- Spamograms (scores) → saved in the scores/ directory if the -r option is used.
+
+
+### Contact:
+ana.izaguirre@udc.es
