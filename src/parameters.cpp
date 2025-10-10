@@ -20,7 +20,6 @@ void printHelp(){
     "\n\t -d <integer>: number of don't-care positions (default 40)"
     "\n\t -s <integer>: the minimum score of a spaced-word match to be considered homologous (default: 0)"
     "\n\t -m <integer>: number of patterns used (default 5)"
-    "\n\t -t <integer>: number of threads (default: omp_get_max_threads() )"
     "\n\t -o <filename>: filename for distance matrix (default: DMat)"
     "\n\t -z : if option is set, the pattern set used will be stored in patterns.txt"
     "\n\t -p <filename>: filename of pattern set to load and reuse"
