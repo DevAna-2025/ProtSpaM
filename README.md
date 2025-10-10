@@ -16,10 +16,13 @@ Esta versión elimina toda la paralelización para ejecutarse de manera **estric
 ---
 
 ## 🔧 Compilación
-Asegúrate de tener un compilador compatible con **C++11 o superior** (por ejemplo `g++` o `clang++`).  
+- Primero necesitas tener la carpeta /data con todo los archivos FASTA
+- Revisa que lo que esta dentro del archivo filelist y que esos archivos existan en /data
+- Corre lo que esta en el archivo Makefile
 
 ```bash
-g++ -std=c++11 -O3 -o protspam_sequential main_sequential.cpp *.cpp
+make
+```
 
 ### 📂 Uso
 El programa acepta los mismos parámetros que la versión original.  
@@ -27,8 +30,8 @@ El programa acepta los mismos parámetros que la versión original.
 Ejemplo de uso con múltiples archivos de entrada:
 
 ```bash
-./protspam_sequential -w 6 -d 40 -m 5 -l input_files.txt -o DMat
-
+./bin/Debug/protspam -w 6 -d 40 -m 5 -l filelist -p patterns.txt
+```
 
 ### ⚙️ Opciones principales
 - `-w <int>` : Peso del patrón (**default:** 6)  
@@ -46,5 +49,4 @@ Ejemplo de uso con múltiples archivos de entrada:
 ### 📊 Salida
 El programa genera los siguientes resultados:  
 - **Matriz de distancias** → archivo de salida (`DMat` por defecto).  
-- **Patrones generados** → en `patterns.txt` si se usa la opción `-z`.  
 - **Spamogramas (scores)** → en el directorio `scores/` si se usa la opción `-r`.  
