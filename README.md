@@ -1,80 +1,138 @@
-# Prot-SpaM
+# ProtSpaM-MPI
 
-### Note
-Currently this program only supports Linux.
+This repository contains an MPI extension of **Prot-SpaM** developed as part of a Master's Thesis in High Performance Computing.
 
-### Compilation
-cd into the root directory (containing the 'Makefile') and type:
+The current implementation focuses on the parallelization of the **spaced-word generation stage (Phase 3)** of the original workflow. The remaining stages preserve the original sequential behaviour and are under development.
 
-```	make ```
+---
 
-### Run
+## Original Project
 
-```	./protspam [options] -l <filelist> ```
+This work is based on:
 
-### Filelist
+> Leimeister, C. A., Schellhorn, J., Schoebel, S., Gerth, M., Bleidorn, C., & Morgenstern, B. (2018).
+> *Prot-SpaM: Fast alignment-free phylogeny reconstruction based on whole-proteome sequences.*
+> bioRxiv, 306142.
 
-The program takes a plain text file containing the relative paths to each input
-dataset. To create your 'filelist' simply type:
+Original repository:
 
-``` ls -1 path/to/input/* > filelist ```
+https://github.com/jschellh/ProtSpaM
 
-This will list each file in specified directory, one file per line.
+---
 
-### Options
+## Current Features
+
+* MPI-based parallelization of the spaced-word generation stage (Phase 3).
+* Distributed computation of local spaced-words across multiple MPI processes.
+* Reproducible experiments using fixed pattern files.
+* Compatibility with the original Prot-SpaM input format and datasets.
+
+---
+
+## Work in Progress
+
+* Parallelization of the matches computation stage (Phase 4).
+* Reduction of unnecessary data movement between phases.
+
+---
+
+## Compilation
+
+From the root directory:
+
+```bash
+make
 ```
-	-h/-?: print this help and exit
-	-w <integer>: pattern weight (default 6)
-	-d <integer>: number of don't-care positions (default 40)
-	-s <integer>: the minimum score of a spaced-word match to be considered homologous (default: 0)
-	-m <integer>: number of patterns used (default 5)
-	-t <integer>: number of threads (default: omp_get_max_threads() )
-	-o <filename>: filename for distance matrix (default: DMat)
-	-l <filename>: specify a list of files to read as input
-	-z : if option is set, the pattern set used will be stored in patterns.txt"
-	-p <filename>: filename of pattern set to load and reuse"
+
+The executable will be generated as:
+
+```bash
+./protspam
 ```
 
-### Sequence format:
+---
 
-Sequence must be in FASTA format. All protein sequences of one proteome must be contained in one FASTA file.
+## Running the Program
+
+```bash
+mpirun -np <processes> ./protspam [options] -l <filelist>
+```
 
 Example:
-```
->Protein1
-RAKSDLKEASDKE..
->Protein2
-ATSDLAGTASDKE..
->Protein3
-ARNCQEFGSDSDW..
-..
+
+```bash
+mpirun -np 32 ./protspam \
+    -l filelist_30 \
+    -p patterns_clean.txt \
+    -o DMat_30sp
 ```
 
-### Citation:
+---
+
+## Input Datasets
+
+The program expects protein datasets in multi-FASTA format, where each FASTA file contains all proteins belonging to a single species/proteome.
+
+Datasets used in the original Prot-SpaM publication can be downloaded from:
+
+http://projects.gobics.de/data/protspam/paperData.tgz
+
+---
+
+## Filelist
+
+Input files are specified through a plain text file containing one FASTA file per line.
+
+To automatically create a filelist:
+
+```bash
+ls -1 path/to/input/* > filelist
 ```
-Scientific publications using filtered spaced word matches should cite:
 
-Leimeister, C. A., Schellhorn, J., Schoebel, S., Gerth, M., Bleidorn, C., & Morgenstern, B. (2018).
-Prot-SpaM: Fast alignment-free phylogeny reconstruction based on whole-proteome sequences.
-bioRxiv, 306142.
+For the experiments presented in this repository:
+
+* `filelist_10`
+* `filelist_20`
+* `filelist_30`
+
+---
+
+## Pattern Files
+
+Prot-SpaM can either generate patterns randomly or load them from a file.
+
+For reproducible experiments, this project uses:
+
+```text
+patterns_clean.txt
 ```
 
-### Paper Abstract:
+with the default Prot-SpaM parameters:
+
+* Weight: 6
+* Number of don't-care positions: 40
+* Threshold: 0
+* Number of patterns: 5
+
+---
+
+## Repository Structure
+
+```text
+.
+├── data/
+├── filelist_10
+├── filelist_20
+├── filelist_30
+├── patterns_clean.txt
+├── main.cpp
+├── logs/
+├── results/
+├── src/
+├── Makefile
+└── README.md
 ```
-Word-based or "alignment-free" sequence comparison has become an active area of research in bioinformatics.
-Recently, fast word-based algorithms have been proposed that are able to accurately estimate phylogenetic
-distances between genomic DNA sequences without the need to calculate full sequence alignments. One of these
-approaches is Filtered Spaced Word Matches. Herein, we extend this approach to estimate evolutionary distances
-between species based on their complete or incomplete proteomes; our implementation is called Prot-SpaM.
-We show that Prot-SpaM can accurately estimate phylogenetic distances, and that our program can be used to
-calculate phylogenetic trees from whole proteomes in a matter of seconds.
-For various groups of taxa, we show that trees calculated with Prot-SpaM are of high quality.
-The source code of our software is available through Github: https://github.com/jschellh/ProtSpaM
-```
 
-### Datasets:
 
-You can download the datasets referenced in the paper [here](http://projects.gobics.de/data/protspam/paperData.tgz).
 
-### Contact:
-jendrik.schellhorn@stud.uni-goettingen.de
+Partial MPI parallelization of Prot-SpaM developed as part of a Master's Thesis in High Performance Computing.
