@@ -1,8 +1,8 @@
 # ProtSpaM-MPI
 
-This repository contains an MPI extension of **Prot-SpaM** developed as part of a Master's Thesis in High Performance Computing.
+MPI extension of **Prot-SpaM** developed as part of a Master's Thesis in High Performance Computing.
 
-The current implementation focuses on the parallelization of the **spaced-word generation stage (Phase 3)** of the original workflow. The remaining stages preserve the original sequential behaviour and are under development.
+The current implementation parallelizes the **spaced-word generation stage (Phase 3)**. The remaining stages preserve the original sequential behaviour and are under development.
 
 ---
 
@@ -20,48 +20,62 @@ https://github.com/jschellh/ProtSpaM
 
 ---
 
-## Current Features
+## Features
 
-* MPI-based parallelization of the spaced-word generation stage (Phase 3).
-* Distributed computation of local spaced-words across multiple MPI processes.
+* MPI-based parallelization of Phase 3 (spaced-words generation).
+* Distributed computation across multiple MPI processes.
 * Reproducible experiments using fixed pattern files.
-* Compatibility with the original Prot-SpaM input format and datasets.
-
----
-
-## Work in Progress
-
-* Parallelization of the matches computation stage (Phase 4).
-* Reduction of unnecessary data movement between phases.
+* Compatible with the original Prot-SpaM input format and datasets.
 
 ---
 
 ## Compilation
 
-From the root directory:
-
 ```bash
 make
 ```
 
-The executable will be generated as:
+Executable:
 
 ```bash
-./bin/Debug/protspam
+./protspam
 ```
 
 ---
 
-## Running the Program
+## Preparing the Data
+
+Before running the program, create a `data/` directory and place the FASTA files according to the paths specified in the corresponding `filelist`.
+
+Example:
 
 ```bash
-mpirun -np <processes> ./bin/Debug/protspam [options] -l <filelist> -p <patterns>
+mkdir data
+cp /path/to/proteomes/*.faa data/
+```
+
+If `filelist_10` contains:
+
+```text
+data/species1.faa
+data/species2.faa
+data/species3.faa
+```
+
+then the files must exist at those locations.
+
+---
+
+## Running
+
+```bash
+mpirun -np <processes> ./protspam [options] -l <filelist> -p <patterns>
 ```
 
 Example:
 
 ```bash
-mpirun -np 32 ./bin/Debug/protspam \
+mpirun -np 32 ./protspam \
     -l filelist_30 \
     -p patterns_clean.txt \
     -o DMat_30sp
@@ -69,27 +83,9 @@ mpirun -np 32 ./bin/Debug/protspam \
 
 ---
 
-## Input Datasets
+## Filelists
 
-The program expects protein datasets in multi-FASTA format, where each FASTA file contains all proteins belonging to a single species/proteome.
-
-Datasets used in the original Prot-SpaM publication can be downloaded from:
-
-http://projects.gobics.de/data/protspam/paperData.tgz
-
----
-
-## Filelist
-
-Input files are specified through a plain text file containing one FASTA file per line.
-
-To automatically create a filelist:
-
-```bash
-ls -1 path/to/input/* > filelist
-```
-
-For the experiments presented in this repository:
+The experiments in this repository use:
 
 * `filelist_10`
 * `filelist_20`
@@ -97,11 +93,9 @@ For the experiments presented in this repository:
 
 ---
 
-## Pattern Files
+## Patterns
 
-Prot-SpaM can either generate patterns randomly or load them from a file.
-
-For reproducible experiments, this project uses:
+Experiments use the fixed pattern file:
 
 ```text
 patterns_clean.txt
@@ -110,7 +104,7 @@ patterns_clean.txt
 with the default Prot-SpaM parameters:
 
 * Weight: 6
-* Number of don't-care positions: 40
+* Don't-care positions: 40
 * Threshold: 0
 * Number of patterns: 5
 
@@ -132,7 +126,3 @@ with the default Prot-SpaM parameters:
 ├── Makefile
 └── README.md
 ```
-
-
-
-Partial MPI parallelization of Prot-SpaM developed as part of a Master's Thesis in High Performance Computing.
