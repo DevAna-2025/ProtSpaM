@@ -47,7 +47,7 @@ make
 The executable will be generated as:
 
 ```bash
-./protspam
+./bin/Debug/protspam
 ```
 
 ---
@@ -55,13 +55,13 @@ The executable will be generated as:
 ## Running the Program
 
 ```bash
-mpirun -np <processes> ./protspam [options] -l <filelist>
+mpirun -np <processes> ./bin/Debug/protspam [options] -l <filelist> -p <patterns>
 ```
 
 Example:
 
 ```bash
-mpirun -np 32 ./protspam \
+mpirun -np 32 ./bin/Debug/protspam \
     -l filelist_30 \
     -p patterns_clean.txt \
     -o DMat_30sp
