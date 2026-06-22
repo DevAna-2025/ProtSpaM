@@ -1,9 +1,9 @@
 #!/bin/bash
-#SBATCH --job-name=protspam_A_benchmark
-#SBATCH --output=logs/slurm_A_benchmark_%j.out
-#SBATCH --error=logs/slurm_A_benchmark_%j.err
+#SBATCH --job-name=protspam_B_bench_r3
+#SBATCH --output=logs/slurm_B_benchmark_%j.out
+#SBATCH --error=logs/slurm_B_benchmark_%j.err
 #SBATCH --ntasks=32
-#SBATCH --time=48:00:00
+#SBATCH --time=24:00:00
 #SBATCH --mem=64G
 
 mkdir -p logs results
@@ -14,9 +14,9 @@ PATTERNS="patterns_clean.txt"
 REPS=5
 NPS="1 2 4 8 16 32"
 
-SUMMARY="logs/resumen_opcionA_${SLURM_JOB_ID}.tsv"
+SUMMARY="logs/resumen_opcionB_${SLURM_JOB_ID}.tsv"
 
-echo -e "species\tnp\trep\tstatus\texit_code\telapsed_seconds\tlog_file\toutput_file" > "$SUMMARY"
+echo -e "option\tspecies\tnp\trep\tstatus\texit_code\telapsed_seconds\tlog_file\toutput_file" > "$SUMMARY"
 
 run_test() {
     species="$1"
@@ -24,7 +24,7 @@ run_test() {
     rep="$3"
     filelist="$4"
 
-    name="A_${species}sp_np${np}_rep${rep}"
+    name="B_${species}sp_np${np}_rep${rep}"
     log="logs/${name}_${SLURM_JOB_ID}.log"
     out="results/DMat_${name}_${SLURM_JOB_ID}"
 
@@ -60,7 +60,7 @@ run_test() {
         status="FAIL"
     fi
 
-    echo -e "${species}\t${np}\t${rep}\t${status}\t${code}\t${elapsed}\t${log}\t${out}" >> "$SUMMARY"
+    echo -e "B\t${species}\t${np}\t${rep}\t${status}\t${code}\t${elapsed}\t${log}\t${out}" >> "$SUMMARY"
 }
 
 run_species_set() {
