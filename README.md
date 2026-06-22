@@ -114,15 +114,16 @@ with the default Prot-SpaM parameters:
 
 ```text
 .
-├── data/
-├── filelist_10
-├── filelist_20
-├── filelist_30
-├── patterns_clean.txt
-├── main.cpp
-├── logs/
-├── results/
-├── src/
-├── Makefile
-└── README.md
+|-- data/
+|-- filelist_10
+|-- filelist_20
+|-- filelist_30
+|-- patterns_clean.txt
+|-- main.cpp
+|-- logs/
+|-- results/
+|-- src/
+|-- include/
+|-- Makefile
+|-- README.md
 ```
