@@ -47,6 +47,8 @@ Executable:
 
 Before running the program, create a `data/` directory and place the FASTA files according to the paths specified in the corresponding `filelist`.
 
+The FASTA datasets are not included in this repository. The files listed in `filelist_10`, `filelist_20` and `filelist_30` must exist before launching the experiments.
+
 Example:
 
 ```bash
@@ -69,17 +71,32 @@ then the files must exist at those locations.
 ## Running
 
 ```bash
-mpirun -np <processes> ./bin/Debug/protspam  [options] -l <filelist> -p <patterns>
+mpirun -np <processes> ./bin/Debug/protspam [options] -l <filelist> -p <patterns>
 ```
 
 Example:
 
 ```bash
-mpirun -np 32 ./bin/Debug/protspam  \
+mpirun -np 32 ./bin/Debug/protspam \
     -l filelist_30 \
     -p patterns_clean.txt \
     -o DMat_30sp
 ```
+
+---
+
+## Benchmark Script
+
+The Phase 3 Option A experiments can be launched with the SLURM script:
+
+```bash
+mkdir -p logs results
+sbatch run_opcionA.sbatch
+```
+
+The script runs 5 repetitions for 10, 20 and 30 species using 1, 2, 4, 8, 16 and 32 MPI processes. It writes individual execution logs to `logs/`, distance matrices to `results/`, and a summary TSV file with the status, exit code and elapsed time of each run.
+
+The experiments are intended to be executed within a single node. The script requests 32 MPI tasks and uses up to 32 processes per run.
 
 ---
 
@@ -120,6 +137,7 @@ with the default Prot-SpaM parameters:
 |-- filelist_30
 |-- patterns_clean.txt
 |-- main.cpp
+|-- run_opcionA.sbatch
 |-- logs/
 |-- results/
 |-- src/
