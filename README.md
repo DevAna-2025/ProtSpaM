@@ -38,7 +38,7 @@ make
 Executable:
 
 ```bash
-./protspam
+./bin/Debug/protspam
 ```
 
 ---
@@ -69,13 +69,13 @@ then the files must exist at those locations.
 ## Running
 
 ```bash
-mpirun -np <processes> ./protspam [options] -l <filelist> -p <patterns>
+mpirun -np <processes> ./bin/Debug/protspam  [options] -l <filelist> -p <patterns>
 ```
 
 Example:
 
 ```bash
-mpirun -np 32 ./protspam \
+mpirun -np 32 ./bin/Debug/protspam  \
     -l filelist_30 \
     -p patterns_clean.txt \
     -o DMat_30sp
