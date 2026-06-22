@@ -1,4 +1,8 @@
-CC = g++ -fopenmp
+MPICXX ?= $(firstword $(shell command -v mpicxx 2>/dev/null || command -v mpic++ 2>/dev/null || command -v mpiCC 2>/dev/null))
+ifeq ($(strip $(MPICXX)),)
+$(error No MPI C++ compiler wrapper found. Load an MPI module, for example: module load openmpi or module load mpich)
+endif
+CC = $(MPICXX) -fopenmp
 IDIR = ./include
 CFLAGS = -c -Wall -std=c++11 -I $(IDIR) -O3
 OBJDIR = ./obj/
@@ -63,7 +67,4 @@ $(OBJDIR)sw_parser.o: src/sw_parser.cpp
 
 clean:
 	rm -rf $(OBJDIR)*.o bin/Debug/protspam
-
-
-
 
