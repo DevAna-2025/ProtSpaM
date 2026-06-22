@@ -5,7 +5,7 @@ using namespace std;
 vector<string> translate_here = {"A","R","N","D","C","Q","E","G","H","I","L","K","M","F","P","S","T","W","Y","V","B","Z","X","*","J"};
 vector<Species> sw_parser(vector<string>& fileNames, vector<Species>& out, vector<vector<char>> const& patterns)
 {
-    for (unsigned int i = 0; i < fileNames.size() -1; ++i)
+    for (unsigned int i = 0; i < fileNames.size(); ++i)
     {
       	ifstream infile(fileNames[i]);
       	if (!infile.good() )
