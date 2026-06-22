@@ -2,7 +2,7 @@
 
 MPI extension of **Prot-SpaM** developed as part of a Master's Thesis in High Performance Computing.
 
-The current implementation parallelizes the **spaced-word generation stage (Phase 3)**. The remaining stages preserve the original sequential behaviour and are under development.
+This branch contains the **Phase 3 Option B** implementation. It parallelizes the spaced-word generation stage using MPI with distributed input reading for `-l` filelist executions. The remaining stages preserve the original sequential behaviour and are under development.
 
 ---
 
@@ -23,6 +23,7 @@ https://github.com/jschellh/ProtSpaM
 ## Features
 
 * MPI-based parallelization of Phase 3 (spaced-words generation).
+* Option B input strategy: each MPI process reads only the subset of FASTA files assigned to its rank.
 * Distributed computation across multiple MPI processes.
 * Reproducible experiments using fixed pattern files.
 * Compatible with the original Prot-SpaM input format and datasets.
@@ -74,6 +75,8 @@ then the files must exist at those locations.
 mpirun -np <processes> ./bin/Debug/protspam [options] -l <filelist> -p <patterns>
 ```
 
+When using `-l <filelist>`, the filelist is divided into contiguous blocks. Each rank reads its local block, computes the spaced-words for its local species, and sends the results back to rank 0. Phase 4 still runs sequentially on rank 0.
+
 Example:
 
 ```bash
@@ -87,11 +90,11 @@ mpirun -np 32 ./bin/Debug/protspam \
 
 ## Benchmark Script
 
-The Phase 3 Option A experiments can be launched with the SLURM script:
+The Phase 3 Option B experiments can be launched with the SLURM script:
 
 ```bash
 mkdir -p logs results
-sbatch run_opcionA.sbatch
+sbatch run_opcionB.sbatch
 ```
 
 The script runs 5 repetitions for 10, 20 and 30 species using 1, 2, 4, 8, 16 and 32 MPI processes. It writes individual execution logs to `logs/`, distance matrices to `results/`, and a summary TSV file with the status, exit code and elapsed time of each run.
@@ -137,7 +140,7 @@ with the default Prot-SpaM parameters:
 |-- filelist_30
 |-- patterns_clean.txt
 |-- main.cpp
-|-- run_opcionA.sbatch
+|-- run_opcionB.sbatch
 |-- logs/
 |-- results/
 |-- src/
