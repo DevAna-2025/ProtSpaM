@@ -2,55 +2,59 @@
 
 MPI extension of **Prot-SpaM** developed as part of a Master's Thesis in High Performance Computing.
 
-This branch contains the MPI implementation used for the Phase 4 experiments. It keeps the Phase 3 Option A approach for input handling and adds a memory-aware parallel Phase 4 based on pattern-level streaming and optimized match computation.
+This implementation parallelizes the most expensive stages of Prot-SpaM while reducing memory consumption during match computation through a pattern-level streaming pipeline.
 
 ## Original Project
 
-This work is based on:
+Based on:
 
-> Leimeister, C. A., Schellhorn, J., Schoebel, S., Gerth, M., Bleidorn, C., & Morgenstern, B. (2018).
+> Leimeister, C. A., Schellhorn, J., Schoebel, S., Gerth, M., Bleidorn, C., & Morgenstern, B. (2018).  
 > *Prot-SpaM: Fast alignment-free phylogeny reconstruction based on whole-proteome sequences.*
-> bioRxiv, 306142.
 
 Original repository:
 
 https://github.com/jschellh/ProtSpaM
 
-## Current MPI Implementation
+---
 
-The implementation parallelizes the most expensive stages of Prot-SpaM:
+## MPI Implementation
 
-- **Phase 3: spaced-word generation**
-  - Species are distributed across MPI ranks.
-  - The distribution is balanced using sequence length, instead of assigning contiguous blocks of species.
-  - Each rank computes spaced-words for its local species.
+### Phase 3 – Spaced-word generation
 
-- **Phase 4: match computation**
-  - Distance matrix pairs are computed in parallel.
-  - Spaced-words are processed in a pattern-level pipeline to reduce peak memory usage.
-  - Remote spaced-words are streamed pattern by pattern instead of replicating all species data on every rank.
-  - Equal-key run lengths are precomputed to avoid repeated `multiMatch` scans inside the match kernel.
-  - Don't-care positions are precomputed per pattern and reused during scoring.
+- Species are distributed across MPI ranks.
+- Load balancing uses sequence length.
+- Each rank computes spaced-words for its assigned species.
 
-This version is referred to in the benchmark scripts as:
+### Phase 4 – Match computation
+
+- Species pairs are processed in parallel.
+- Spaced-words are streamed one pattern at a time to reduce memory usage.
+- Remote spaced-words are exchanged on demand instead of replicating the complete dataset.
+- Equal-key run lengths and don't-care positions are precomputed to accelerate matching.
+
+This implementation corresponds to the benchmark version:
 
 ```text
 pipeline_runlen
 ```
 
+---
+
 ## Requirements
 
-- C++ compiler with C++11 support
-- MPI compiler wrapper, such as `mpicxx`
+- C++11 compiler
+- MPI implementation (e.g. OpenMPI)
 - GNU Make
 
-On FinisTerrae III, the experiments were run with:
+Example environment on FinisTerrae III:
 
 ```bash
 module load cesga/2025
 module load gcc
 module load openmpi/5.0.9
 ```
+
+---
 
 ## Compilation
 
@@ -59,48 +63,36 @@ make clean
 make
 ```
 
-The executable is generated at:
+Executable:
 
-```bash
+```text
 ./bin/Debug/protspam
 ```
 
+---
+
 ## Preparing the Data
 
-Create a `data/` directory and place the FASTA/proteome files according to the paths used in the filelists.
-
-The biological datasets are not included in this repository. The files listed in:
-
-- `filelist_10`
-- `filelist_20`
-- `filelist_30`
-
-must exist before running the experiments.
-
-Example:
+Create the data directory and copy the proteome files referenced by the filelists.
 
 ```bash
 mkdir -p data
 cp /path/to/proteomes/*.faa data/
 ```
 
-If a filelist contains:
+Datasets are **not included** in this repository.
 
-```text
-data/species1.faa
-data/species2.faa
-```
+The experiments used the following filelists:
 
-then those files must exist at those paths.
+- `filelist_10`
+- `filelist_20`
+- `filelist_30`
+- `filelist_50`
+- `filelist_55`
 
-## Running Manually
+---
 
-```bash
-mpirun -np <processes> ./bin/Debug/protspam \
-    -l <filelist> \
-    -p patterns_clean.txt \
-    -o <output_matrix>
-```
+## Running
 
 Example:
 
@@ -111,7 +103,7 @@ mpirun -np 4 ./bin/Debug/protspam \
     -o DMat_20sp_np4
 ```
 
-The program reports separate timings for:
+The program reports:
 
 ```text
 Tiempo spaced-words
@@ -119,95 +111,81 @@ Tiempo matches
 Tiempo total
 ```
 
-In MPI executions, Phase 3 and Phase 4 are internally interleaved by pattern to reduce memory usage, but the accumulated times are still reported separately.
+---
 
-## Benchmark Scripts
+## Benchmarks
 
-Two SLURM scripts are included for Phase 4 benchmarking.
+### Single-node
 
-### Single-node benchmark
+Create the output directories:
+
+```bash
+mkdir -p logs_phase4_single_64g results_phase4_single_64g
+```
+
+Run:
 
 ```bash
 sbatch run_phase4_single.sbatch
 ```
 
-This script evaluates:
+Experiments were performed for:
 
-- Species sets: 10, 20 and 30
-- MPI processes: 1, 2, 4, 8, 16 and 32
-- Repetitions: 5
-- Nodes: 1
+- 10 species
+- 20 species
+- 30 species
+- 50 species
+- 55 species
 
-Outputs:
+using multiple MPI process counts.
 
-```text
-logs_phase4_pipeline/
-results_phase4_pipeline/
-logs_phase4_pipeline/resumen_single_<job_id>.tsv
-```
+### Multi-node
 
-### Multinode benchmark
+Create the output directories:
 
 ```bash
-sbatch run_phase4_multinode.sbatch
+mkdir -p logs_phase4_nodes results_phase4_nodes
 ```
 
-This script evaluates:
+Experiments were performed with **32 MPI processes** distributed over different numbers of nodes:
 
-- Species sets: 20 and 30
-- MPI processes: 8 and 16
-- Repetitions: 3
-- Nodes: 2
+```bash
+sbatch --nodes=1 --ntasks=32 --ntasks-per-node=32 run_phase4_nodes.sbatch
 
-Outputs:
+sbatch --nodes=2 --ntasks=32 --ntasks-per-node=16 run_phase4_nodes.sbatch
 
-```text
-logs_phase4_multinode/
-results_phase4_multinode/
-logs_phase4_multinode/resumen_multi_<job_id>.tsv
+sbatch --nodes=4 --ntasks=32 --ntasks-per-node=8 run_phase4_nodes.sbatch
+
+sbatch --nodes=8 --ntasks=32 --ntasks-per-node=4 run_phase4_nodes.sbatch
 ```
 
-The multinode benchmark is intended as an exploratory scalability experiment. The main performance analysis should use the single-node benchmark, while multinode results are useful for studying memory pressure and communication overhead.
+---
 
-## Output Files
+## Output
 
-The main output is a distance matrix file:
+Each execution generates:
 
-```text
-DMat_*
-```
-
-Benchmark scripts also generate:
-
-- one execution log per run;
-- one output matrix per run;
-- one TSV summary containing status, exit code, Phase 3 time, Phase 4 time, total program time and elapsed wall-clock time.
-
-Generated logs, matrices and binaries are ignored by Git.
+- a distance matrix (`DMat_*`);
+- execution logs;
+- summary files (`resumen_*.tsv`) containing execution status, Phase 3 time, Phase 4 time, total program time and wall-clock time.
+---
 
 ## Repository Structure
 
 ```text
 .
-|-- include/
-|-- src/
-|-- main.cpp
-|-- Makefile
-|-- filelist_10
-|-- filelist_20
-|-- filelist_30
-|-- patterns_clean.txt
-|-- run_phase4_single.sbatch
-|-- run_phase4_multinode.sbatch
-|-- run_opcionA.sbatch
-|-- README.md
-|-- COPYING
+├── include/
+├── src/
+├── main.cpp
+├── Makefile
+├── filelist_10
+├── filelist_20
+├── filelist_30
+├── filelist_50
+├── filelist_55
+├── patterns_clean.txt
+├── run_phase4_single.sbatch
+├── run_phase4_nodes.sbatch
+├── README.md
+└── COPYING
 ```
-
-`run_opcionA.sbatch` is kept as a historical Phase 3 Option A benchmark script. The Phase 4 results reported for this version should use `run_phase4_single.sbatch` and `run_phase4_multinode.sbatch`.
-
-## Notes on the Final Phase 4 Version
-
-The final Phase 4 implementation was designed after observing memory failures in earlier prototypes. The previous approaches either gathered too much data on rank 0 or replicated too much spaced-word data across MPI ranks. The current pipeline version reduces peak memory by consuming one pattern at a time and discarding temporary spaced-word data before moving to the next pattern.
-
-This improves robustness for larger species sets while preserving the output distance matrix, as verified by comparing MPI outputs against one-process reference outputs.
