@@ -1,76 +1,83 @@
-# ProtSpaM-MPI
+# ProtSpaM-MPI - Fase 4
 
-Extensión con MPI de **Prot-SpaM**, desarrollada como parte de un Trabajo de Fin de Máster en Computación de Altas Prestaciones.
+Extension con MPI de **Prot-SpaM**, desarrollada como parte del TFM en Computacion de Altas Prestaciones.
 
-Esta implementación paraleliza las etapas más costosas de Prot-SpaM, al tiempo que reduce el consumo de memoria durante el cálculo de coincidencias mediante una tubería (*pipeline*) de procesamiento a nivel de patrón.
+Esta carpeta contiene la version usada para el avance de la fase 4. 
 
-## Proyecto Original
+## Proyecto original
 
-Basado en:
+Este trabajo se basa en:
 
-> Leimeister, C. A., Schellhorn, J., Schoebel, S., Gerth, M., Bleidorn, C., & Morgenstern, B. (2018).  
-> *Prot-SpaM: Fast alignment-free phylogeny reconstruction based on whole-proteome sequences.*
+> Leimeister, C. A., Schellhorn, J., Schoebel, M., Gerth, M., Bleidorn, C., & Morgenstern, B. (2018).  
+> Prot-SpaM: Fast alignment-free phylogeny reconstruction based on whole-proteome sequences.
 
 Repositorio original:
 
 https://github.com/jschellh/ProtSpaM
 
----
+## Cambios principales de esta fase
 
-## Implementación MPI
+### Fase 3
 
-### Fase 3 – Generación de palabras espaciadas
+- Las especies se distribuyen entre procesos MPI.
+- El reparto se balancea usando el tamano de las secuencias.
+- Cada proceso calcula los spaced-words de sus especies locales.
 
-- Las especies se distribuyen entre los distintos *ranks* de MPI.
-- El balanceo de carga se realiza en función de la longitud de las secuencias.
-- Cada *rank* calcula las palabras espaciadas correspondientes a las especies que tiene asignadas.
+### Fase 4
 
-### Fase 4 – Cálculo de coincidencias
+- Los pares de especies se calculan en paralelo.
+- Los spaced-words se procesan patron por patron para reducir memoria.
+- En multinodo se evita enviar datos remotos a procesos que no los necesitan.
+- Se precalculan posiciones don't-care y bloques de spaced-words con la misma clave para reducir trabajo repetido en `calc_matches`.
+- El programa imprime tiempos separados para fase 3, fase 4 y tiempo total.
 
-- Los pares de especies se procesan en paralelo.
-- Las palabras espaciadas se transmiten (*streaming*) un patrón cada vez para reducir el uso de memoria.
-- Las palabras espaciadas remotas se intercambian bajo demanda, en lugar de replicar el conjunto de datos completo.
-- Las longitudes de secuencias consecutivas con la misma clave (*equal-key run lengths*) y las posiciones *don't-care* se precalculan para acelerar el proceso de búsqueda de coincidencias.
----
+## Requisitos
 
+En FinisTerrae III se usaron los siguientes modulos:
 
-## Compilación
+```bash
+module load cesga/2025
+module load gcc
+module load openmpi/5.0.9
+```
+
+## Compilacion
 
 ```bash
 make clean
 make
 ```
 
-Ejecutable:
+El ejecutable queda en:
 
 ```text
 ./bin/Debug/protspam
 ```
 
----
+## Preparacion de datos
 
-## Preparación de los datos
+Los proteomas no se incluyen en el repositorio. Antes de ejecutar, debe existir la carpeta `data/` y los archivos referenciados por cada filelist.
 
-Crea el directorio de datos y copia los archivos de proteomas referenciados por los *filelists*.
+Ejemplo:
 
 ```bash
 mkdir -p data
 cp /ruta/a/proteomas/*.faa data/
 ```
 
-Los conjuntos de datos **no están incluidos** en este repositorio.
+Los experimentos de fase 4 se prepararon con estos filelists:
 
-Los experimentos utilizaron los siguientes *filelists*:
+```text
+filelist_10
+filelist_20
+filelist_30
+filelist_50
+filelist_55
+```
 
-- `filelist_10`
-- `filelist_20`
-- `filelist_30`
-- `filelist_50`
-- `filelist_55`
+No se uso `filelist_40` en el informe de avance.
 
----
-
-## Ejecución
+## Ejecucion manual
 
 Ejemplo:
 
@@ -81,51 +88,70 @@ mpirun -np 4 ./bin/Debug/protspam \
     -o DMat_20sp_np4
 ```
 
-El programa muestra:
+La salida del programa incluye:
 
 ```text
-Tiempo de generación de palabras espaciadas
-Tiempo de cálculo de coincidencias
+Tiempo spaced-words
+Tiempo matches
 Tiempo total
 ```
 
----
-
 ## Benchmarks
 
-### Un solo nodo
+Antes de ejecutar los batch scripts es necesario crear las carpetas donde se escribiran logs y matrices de salida. Si las carpetas no existen, SLURM puede fallar al abrir los archivos indicados en `#SBATCH --output` y `#SBATCH --error`.
 
-Crea los directorios de salida:
+### Un nodo
+
+Crear carpetas:
 
 ```bash
 mkdir -p logs_phase4_single_64g results_phase4_single_64g
 ```
 
-Ejecuta:
+Ejecutar:
 
 ```bash
 sbatch run_phase4_single.sbatch
 ```
 
-Los experimentos se realizaron para:
+Configuracion usada:
 
-- 10 especies
-- 20 especies
-- 30 especies
-- 50 especies
-- 55 especies
-
-utilizando diferentes cantidades de procesos MPI.
-
-### Múltiples nodos
-
-Crea los directorios de salida:
-
-```bash
-mkdir -p logs_phase4_nodes results_phase4_nodes
+```text
+Nodos: 1
+Memoria: 64 GB
+Procesos MPI evaluados: 1, 2, 4, 8, 16, 32
+Repeticiones: 5
 ```
 
-Los experimentos se realizaron con **32 procesos MPI** distribuidos en distintos números de nodos:
+Datasets ejecutados en el script:
+
+```bash
+run_species_set 10 filelist_10
+run_species_set 20 filelist_20
+run_species_set 30 filelist_30
+run_species_set 50 filelist_50
+run_species_set 55 filelist_55
+```
+
+Salida principal:
+
+```text
+logs_phase4_single_64g/resumen_single_64g_<job_id>.tsv
+logs_phase4_single_64g/*.log
+results_phase4_single_64g/DMat_*
+```
+
+### Multinodo
+
+El benchmark multinodo se ejecuto lanzando el mismo script varias veces, cambiando los parametros de SLURM para reflejar el numero de nodos. El script guarda `SLURM_JOB_NUM_NODES`, `SLURM_NTASKS`, `ntasks_per_node` y `SLURM_NODELIST` en el resumen TSV.
+
+Crear carpetas:
+
+```bash
+mkdir -p logs_phase4_nodes_allnp_64g results_phase4_nodes_allnp_64g
+```
+
+Comandos usados para reflejar distintos numeros de nodos:
 
 ```bash
 sbatch --nodes=1 --ntasks=32 --ntasks-per-node=32 run_phase4_nodes.sbatch
@@ -137,34 +163,61 @@ sbatch --nodes=4 --ntasks=32 --ntasks-per-node=8 run_phase4_nodes.sbatch
 sbatch --nodes=8 --ntasks=32 --ntasks-per-node=4 run_phase4_nodes.sbatch
 ```
 
----
+Configuracion usada:
 
-## Salida
+```text
+Memoria: 64 GB por nodo
+Procesos MPI evaluados dentro del script: 1, 2, 4, 8, 16, 32
+Repeticiones: 5
+```
 
-Cada ejecución genera:
+Datasets ejecutados en el script:
 
-- una matriz de distancias (`DMat_*`);
-- registros de ejecución (*logs*);
-- archivos resumen (`resumen_*.tsv`) que contienen el estado de la ejecución, el tiempo de la Fase 3, el tiempo de la Fase 4, el tiempo total del programa y el tiempo de ejecución real (*wall-clock time*).
+```bash
+run_species_set 10 filelist_10
+run_species_set 20 filelist_20
+run_species_set 30 filelist_30
+run_species_set 50 filelist_50
+run_species_set 55 filelist_55
+```
 
----
+Salida principal:
 
-## Estructura del repositorio
+```text
+logs_phase4_nodes_allnp_64g/resumen_nodes<N>_allnp_64g_<job_id>.tsv
+logs_phase4_nodes_allnp_64g/*.log
+results_phase4_nodes_allnp_64g/DMat_*
+```
+
+Donde `<N>` corresponde al numero de nodos asignado por SLURM.
+
+## Resultados generados
+
+Cada ejecucion genera:
+
+- una matriz de distancias `DMat_*`;
+- un log individual;
+- una fila en un TSV resumen con estado, codigo de salida, tiempo de fase 3, tiempo de fase 4, tiempo total y tiempo real de ejecucion.
+
+Los TSV finales usados para el informe de avance corresponden a ejecuciones con 10, 20, 30, 50 y 55 especies, 64 GB de memoria por nodo y 5 repeticiones por configuracion.
+
+## Estructura principal
 
 ```text
 .
-├── include/
-├── src/
-├── main.cpp
-├── Makefile
-├── filelist_10
-├── filelist_20
-├── filelist_30
-├── filelist_50
-├── filelist_55
-├── patterns_clean.txt
-├── run_phase4_single.sbatch
-├── run_phase4_nodes.sbatch
-├── README.md
-└── COPYING
+|-- include/
+|-- src/
+|-- data/
+|-- main.cpp
+|-- Makefile
+|-- filelist_10
+|-- filelist_20
+|-- filelist_30
+|-- filelist_50
+|-- filelist_55
+|-- patterns_clean.txt
+|-- run_phase4_single.sbatch
+|-- run_phase4_nodes.sbatch
+|-- README.md
+|-- COPYING
 ```
