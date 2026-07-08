@@ -31,30 +31,8 @@ https://github.com/jschellh/ProtSpaM
 - Las palabras espaciadas se transmiten (*streaming*) un patrón cada vez para reducir el uso de memoria.
 - Las palabras espaciadas remotas se intercambian bajo demanda, en lugar de replicar el conjunto de datos completo.
 - Las longitudes de secuencias consecutivas con la misma clave (*equal-key run lengths*) y las posiciones *don't-care* se precalculan para acelerar el proceso de búsqueda de coincidencias.
-
-Esta implementación corresponde a la versión utilizada en los benchmarks:
-
-```text
-pipeline_runlen
-```
-
 ---
 
-## Requisitos
-
-- Compilador compatible con C++11.
-- Implementación de MPI (por ejemplo, OpenMPI).
-- GNU Make.
-
-Ejemplo del entorno utilizado en FinisTerrae III:
-
-```bash
-module load cesga/2025
-module load gcc
-module load openmpi/5.0.9
-```
-
----
 
 ## Compilación
 
