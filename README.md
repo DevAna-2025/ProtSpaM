@@ -1,42 +1,42 @@
 # ProtSpaM-MPI
 
-MPI extension of **Prot-SpaM** developed as part of a Master's Thesis in High Performance Computing.
+Extensión con MPI de **Prot-SpaM**, desarrollada como parte de un Trabajo de Fin de Máster en Computación de Altas Prestaciones.
 
-This branch contains the **Phase 3 Option B** implementation. It parallelizes the spaced-word generation stage using MPI with distributed input reading for `-l` filelist executions. The remaining stages preserve the original sequential behaviour and are under development.
+Esta rama contiene la implementación de la **Fase 3 - Opción B**. Paraleliza la etapa de generación de palabras espaciadas utilizando MPI con lectura distribuida de la entrada para ejecuciones mediante `-l` (*filelist*). Las etapas restantes conservan el comportamiento secuencial original y continúan en desarrollo.
 
 ---
 
-## Original Project
+## Proyecto Original
 
-This work is based on:
+Este trabajo está basado en:
 
 > Leimeister, C. A., Schellhorn, J., Schoebel, S., Gerth, M., Bleidorn, C., & Morgenstern, B. (2018).
 > *Prot-SpaM: Fast alignment-free phylogeny reconstruction based on whole-proteome sequences.*
 > bioRxiv, 306142.
 
-Original repository:
+Repositorio original:
 
 https://github.com/jschellh/ProtSpaM
 
 ---
 
-## Features
+## Características
 
-* MPI-based parallelization of Phase 3 (spaced-words generation).
-* Option B input strategy: each MPI process reads only the subset of FASTA files assigned to its rank.
-* Distributed computation across multiple MPI processes.
-* Reproducible experiments using fixed pattern files.
-* Compatible with the original Prot-SpaM input format and datasets.
+* Paralelización de la Fase 3 (generación de palabras espaciadas) mediante MPI.
+* Estrategia de entrada Opción B: cada proceso MPI lee únicamente el subconjunto de archivos FASTA asignado a su rango (*rank*).
+* Computación distribuida entre múltiples procesos MPI.
+* Experimentos reproducibles utilizando archivos de patrones fijos.
+* Compatible con el formato de entrada y los conjuntos de datos originales de Prot-SpaM.
 
 ---
 
-## Compilation
+## Compilación
 
 ```bash
 make
 ```
 
-Executable:
+Ejecutable:
 
 ```bash
 ./bin/Debug/protspam
@@ -44,20 +44,20 @@ Executable:
 
 ---
 
-## Preparing the Data
+## Preparación de los datos
 
-Before running the program, create a `data/` directory and place the FASTA files according to the paths specified in the corresponding `filelist`.
+Antes de ejecutar el programa, crea un directorio `data/` y coloca los archivos FASTA según las rutas especificadas en el `filelist` correspondiente.
 
-The FASTA datasets are not included in this repository. The files listed in `filelist_10`, `filelist_20` and `filelist_30` must exist before launching the experiments.
+Los conjuntos de datos FASTA no están incluidos en este repositorio. Los archivos listados en `filelist_10`, `filelist_20` y `filelist_30` deben existir antes de ejecutar los experimentos.
 
-Example:
+Ejemplo:
 
 ```bash
 mkdir data
-cp /path/to/proteomes/*.faa data/
+cp /ruta/a/proteomas/*.faa data/
 ```
 
-If `filelist_10` contains:
+Si `filelist_10` contiene:
 
 ```text
 data/species1.faa
@@ -65,19 +65,19 @@ data/species2.faa
 data/species3.faa
 ```
 
-then the files must exist at those locations.
+entonces los archivos deben existir en esas ubicaciones.
 
 ---
 
-## Running
+## Ejecución
 
 ```bash
-mpirun -np <processes> ./bin/Debug/protspam [options] -l <filelist> -p <patterns>
+mpirun -np <procesos> ./bin/Debug/protspam [opciones] -l <filelist> -p <patrones>
 ```
 
-When using `-l <filelist>`, the filelist is divided into contiguous blocks. Each rank reads its local block, computes the spaced-words for its local species, and sends the results back to rank 0. Phase 4 still runs sequentially on rank 0.
+Al utilizar `-l <filelist>`, el archivo *filelist* se divide en bloques contiguos. Cada *rank* lee su bloque local, calcula las palabras espaciadas correspondientes a sus especies asignadas y envía los resultados al *rank* 0. La Fase 4 continúa ejecutándose de forma secuencial en el *rank* 0.
 
-Example:
+Ejemplo:
 
 ```bash
 mpirun -np 32 ./bin/Debug/protspam \
@@ -88,24 +88,24 @@ mpirun -np 32 ./bin/Debug/protspam \
 
 ---
 
-## Benchmark Script
+## Script de Benchmark
 
-The Phase 3 Option B experiments can be launched with the SLURM script:
+Los experimentos de la **Fase 3 - Opción B** pueden ejecutarse mediante el script de SLURM:
 
 ```bash
 mkdir -p logs results
 sbatch run_opcionB.sbatch
 ```
 
-The script runs 5 repetitions for 10, 20 and 30 species using 1, 2, 4, 8, 16 and 32 MPI processes. It writes individual execution logs to `logs/`, distance matrices to `results/`, and a summary TSV file with the status, exit code and elapsed time of each run.
+El script ejecuta 5 repeticiones para 10, 20 y 30 especies utilizando 1, 2, 4, 8, 16 y 32 procesos MPI. Los registros individuales de ejecución se almacenan en `logs/`, las matrices de distancia en `results/` y se genera un archivo resumen en formato TSV con el estado, el código de salida y el tiempo de ejecución de cada experimento.
 
-The experiments are intended to be executed within a single node. The script requests 32 MPI tasks and uses up to 32 processes per run.
+Los experimentos están diseñados para ejecutarse dentro de un único nodo. El script solicita 32 tareas MPI y utiliza hasta 32 procesos por ejecución.
 
 ---
 
 ## Filelists
 
-The experiments in this repository use:
+Los experimentos de este repositorio utilizan:
 
 * `filelist_10`
 * `filelist_20`
@@ -113,24 +113,24 @@ The experiments in this repository use:
 
 ---
 
-## Patterns
+## Patrones
 
-Experiments use the fixed pattern file:
+Los experimentos utilizan el archivo de patrones fijo:
 
 ```text
 patterns_clean.txt
 ```
 
-with the default Prot-SpaM parameters:
+con los parámetros por defecto de Prot-SpaM:
 
-* Weight: 6
-* Don't-care positions: 40
-* Threshold: 0
-* Number of patterns: 5
+* Peso: 6
+* Posiciones *don't-care*: 40
+* Umbral: 0
+* Número de patrones: 5
 
 ---
 
-## Repository Structure
+## Estructura del repositorio
 
 ```text
 .
