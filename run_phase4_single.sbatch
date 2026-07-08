@@ -11,7 +11,7 @@ module load cesga/2025
 module load gcc
 module load openmpi/5.0.9
 
-mkdir -p logs_phase4_single_64g results_phase4_single_64g
+
 
 BIN="./bin/Debug/protspam"
 PATTERNS="patterns_clean.txt"
@@ -120,6 +120,10 @@ run_species_set() {
     done
 }
 
+run_species_set 10 filelist_10
+run_species_set 20 filelist_20
+run_species_set 30 filelist_30
+run_species_set 50 filelist_50
 run_species_set 55 filelist_55
 
 echo "=================================================="
