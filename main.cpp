@@ -419,7 +419,7 @@ void distribute_species(vector<Species> &species,
     MPI_Bcast(owners.data(), total_species, MPI_INT, 0, MPI_COMM_WORLD);
 }
 
-// Fase 3 paralela tradicional: cada proceso calcula todos los patrones de sus
+// Fase 3 paralela: cada proceso calcula todos los patrones de sus
 // especies locales. Se usa solo en ejecuciones con un proceso, donde no necesito
 // el pipeline por patron.
 void calculate_local_spaced_words(vector<Species> &local_species,
