@@ -1,38 +1,38 @@
 # ProtSpaM-MPI
 
-MPI extension of **Prot-SpaM** developed as part of a Master's Thesis in High Performance Computing.
+Extensión con MPI de **Prot-SpaM**, desarrollada como parte de un Trabajo de Fin de Máster en Computación de Altas Prestaciones.
 
-This implementation parallelizes the most expensive stages of Prot-SpaM while reducing memory consumption during match computation through a pattern-level streaming pipeline.
+Esta implementación paraleliza las etapas más costosas de Prot-SpaM, al tiempo que reduce el consumo de memoria durante el cálculo de coincidencias mediante una tubería (*pipeline*) de procesamiento a nivel de patrón.
 
-## Original Project
+## Proyecto Original
 
-Based on:
+Basado en:
 
 > Leimeister, C. A., Schellhorn, J., Schoebel, S., Gerth, M., Bleidorn, C., & Morgenstern, B. (2018).  
 > *Prot-SpaM: Fast alignment-free phylogeny reconstruction based on whole-proteome sequences.*
 
-Original repository:
+Repositorio original:
 
 https://github.com/jschellh/ProtSpaM
 
 ---
 
-## MPI Implementation
+## Implementación MPI
 
-### Phase 3 – Spaced-word generation
+### Fase 3 – Generación de palabras espaciadas
 
-- Species are distributed across MPI ranks.
-- Load balancing uses sequence length.
-- Each rank computes spaced-words for its assigned species.
+- Las especies se distribuyen entre los distintos *ranks* de MPI.
+- El balanceo de carga se realiza en función de la longitud de las secuencias.
+- Cada *rank* calcula las palabras espaciadas correspondientes a las especies que tiene asignadas.
 
-### Phase 4 – Match computation
+### Fase 4 – Cálculo de coincidencias
 
-- Species pairs are processed in parallel.
-- Spaced-words are streamed one pattern at a time to reduce memory usage.
-- Remote spaced-words are exchanged on demand instead of replicating the complete dataset.
-- Equal-key run lengths and don't-care positions are precomputed to accelerate matching.
+- Los pares de especies se procesan en paralelo.
+- Las palabras espaciadas se transmiten (*streaming*) un patrón cada vez para reducir el uso de memoria.
+- Las palabras espaciadas remotas se intercambian bajo demanda, en lugar de replicar el conjunto de datos completo.
+- Las longitudes de secuencias consecutivas con la misma clave (*equal-key run lengths*) y las posiciones *don't-care* se precalculan para acelerar el proceso de búsqueda de coincidencias.
 
-This implementation corresponds to the benchmark version:
+Esta implementación corresponde a la versión utilizada en los benchmarks:
 
 ```text
 pipeline_runlen
@@ -40,13 +40,13 @@ pipeline_runlen
 
 ---
 
-## Requirements
+## Requisitos
 
-- C++11 compiler
-- MPI implementation (e.g. OpenMPI)
-- GNU Make
+- Compilador compatible con C++11.
+- Implementación de MPI (por ejemplo, OpenMPI).
+- GNU Make.
 
-Example environment on FinisTerrae III:
+Ejemplo del entorno utilizado en FinisTerrae III:
 
 ```bash
 module load cesga/2025
@@ -56,14 +56,14 @@ module load openmpi/5.0.9
 
 ---
 
-## Compilation
+## Compilación
 
 ```bash
 make clean
 make
 ```
 
-Executable:
+Ejecutable:
 
 ```text
 ./bin/Debug/protspam
@@ -71,18 +71,18 @@ Executable:
 
 ---
 
-## Preparing the Data
+## Preparación de los datos
 
-Create the data directory and copy the proteome files referenced by the filelists.
+Crea el directorio de datos y copia los archivos de proteomas referenciados por los *filelists*.
 
 ```bash
 mkdir -p data
-cp /path/to/proteomes/*.faa data/
+cp /ruta/a/proteomas/*.faa data/
 ```
 
-Datasets are **not included** in this repository.
+Los conjuntos de datos **no están incluidos** en este repositorio.
 
-The experiments used the following filelists:
+Los experimentos utilizaron los siguientes *filelists*:
 
 - `filelist_10`
 - `filelist_20`
@@ -92,9 +92,9 @@ The experiments used the following filelists:
 
 ---
 
-## Running
+## Ejecución
 
-Example:
+Ejemplo:
 
 ```bash
 mpirun -np 4 ./bin/Debug/protspam \
@@ -103,11 +103,11 @@ mpirun -np 4 ./bin/Debug/protspam \
     -o DMat_20sp_np4
 ```
 
-The program reports:
+El programa muestra:
 
 ```text
-Tiempo spaced-words
-Tiempo matches
+Tiempo de generación de palabras espaciadas
+Tiempo de cálculo de coincidencias
 Tiempo total
 ```
 
@@ -115,39 +115,39 @@ Tiempo total
 
 ## Benchmarks
 
-### Single-node
+### Un solo nodo
 
-Create the output directories:
+Crea los directorios de salida:
 
 ```bash
 mkdir -p logs_phase4_single_64g results_phase4_single_64g
 ```
 
-Run:
+Ejecuta:
 
 ```bash
 sbatch run_phase4_single.sbatch
 ```
 
-Experiments were performed for:
+Los experimentos se realizaron para:
 
-- 10 species
-- 20 species
-- 30 species
-- 50 species
-- 55 species
+- 10 especies
+- 20 especies
+- 30 especies
+- 50 especies
+- 55 especies
 
-using multiple MPI process counts.
+utilizando diferentes cantidades de procesos MPI.
 
-### Multi-node
+### Múltiples nodos
 
-Create the output directories:
+Crea los directorios de salida:
 
 ```bash
 mkdir -p logs_phase4_nodes results_phase4_nodes
 ```
 
-Experiments were performed with **32 MPI processes** distributed over different numbers of nodes:
+Los experimentos se realizaron con **32 procesos MPI** distribuidos en distintos números de nodos:
 
 ```bash
 sbatch --nodes=1 --ntasks=32 --ntasks-per-node=32 run_phase4_nodes.sbatch
@@ -161,16 +161,17 @@ sbatch --nodes=8 --ntasks=32 --ntasks-per-node=4 run_phase4_nodes.sbatch
 
 ---
 
-## Output
+## Salida
 
-Each execution generates:
+Cada ejecución genera:
 
-- a distance matrix (`DMat_*`);
-- execution logs;
-- summary files (`resumen_*.tsv`) containing execution status, Phase 3 time, Phase 4 time, total program time and wall-clock time.
+- una matriz de distancias (`DMat_*`);
+- registros de ejecución (*logs*);
+- archivos resumen (`resumen_*.tsv`) que contienen el estado de la ejecución, el tiempo de la Fase 3, el tiempo de la Fase 4, el tiempo total del programa y el tiempo de ejecución real (*wall-clock time*).
+
 ---
 
-## Repository Structure
+## Estructura del repositorio
 
 ```text
 .
