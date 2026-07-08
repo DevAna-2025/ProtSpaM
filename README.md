@@ -1,4 +1,4 @@
-# ProtSpaM-MPI
+# ProtSpaM-MPI - Fase  3
 
 Extensión con MPI de **Prot-SpaM**, desarrollada como parte de un Trabajo de Fin de Máster en Computación de Altas Prestaciones.
 
