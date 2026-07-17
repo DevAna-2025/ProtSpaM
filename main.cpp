@@ -300,40 +300,24 @@ Species recv_species(int source)
     return species;
 }
 
-// En la opcion A mantengo el parsing en rank 0. Para que el reparto de trabajo
-// no dependa del orden del filelist, asigno primero las especies mas grandes al
-// proceso que tenga menos carga acumulada.
-vector<vector<int>> build_balanced_assignments(const vector<Species> &species, int size)
+// Variante para comparar la fase 3: reparto por bloques contiguos, como en la
+// version anterior. Se conserva el mismo indice global de cada especie.
+vector<vector<int>> build_block_assignments(const vector<Species> &species, int size)
 {
-    vector<SpeciesAssignment> items;
-    items.reserve(species.size());
-
-    for (int i = 0; i < static_cast<int>(species.size()); ++i)
-    {
-        SpeciesAssignment item;
-        item.index = i;
-        item.size = species[i].seq.size();
-        items.push_back(item);
-    }
-
-    sort(items.begin(), items.end(),
-         [](const SpeciesAssignment &a, const SpeciesAssignment &b) {
-             return a.size > b.size;
-         });
-
     vector<vector<int>> assignments(size);
-    vector<size_t> loads(size, 0);
+    int total_species = static_cast<int>(species.size());
+    int base = total_species / size;
+    int remainder = total_species % size;
 
-    for (const SpeciesAssignment &item : items)
+    for (int rank_id = 0; rank_id < size; ++rank_id)
     {
-        int target = static_cast<int>(min_element(loads.begin(), loads.end()) - loads.begin());
-        assignments[target].push_back(item.index);
-        loads[target] += item.size;
-    }
+        int count = base + (rank_id < remainder ? 1 : 0);
+        int begin = rank_id * base + min(rank_id, remainder);
 
-    for (vector<int> &assignment : assignments)
-    {
-        sort(assignment.begin(), assignment.end());
+        for (int offset = 0; offset < count; ++offset)
+        {
+            assignments[rank_id].push_back(begin + offset);
+        }
     }
 
     return assignments;
@@ -365,7 +349,7 @@ vector<int> recv_int_list(int source)
 }
 
 // Rank 0 conserva la lectura/parsing secuencial de entrada y reparte especies a
-// los demas procesos usando una asignacion balanceada por longitud de secuencia.
+// los demas procesos usando bloques contiguos del filelist.
 void distribute_species(vector<Species> &species,
                         vector<Species> &local_species,
                         vector<int> &local_indices,
@@ -376,7 +360,7 @@ void distribute_species(vector<Species> &species,
 {
     if (rank == 0)
     {
-        vector<vector<int>> assignments = build_balanced_assignments(species, size);
+        vector<vector<int>> assignments = build_block_assignments(species, size);
         owners.assign(total_species, 0);
         for (int owner = 0; owner < size; ++owner)
         {
@@ -911,6 +895,55 @@ Species stream_species_metadata_for_phase4(const vector<Species> &local_species,
     return recv_species(owner);
 }
 
+// La metadata de una especie no cambia entre patrones. En esta variante la
+// comunicacion de header, secuencia y starts se hace una sola vez antes del
+// pipeline; dentro del bucle de patrones solo se envian los spaced-words.
+vector<Species> build_remote_metadata_cache(const vector<Species> &local_species,
+                                            const vector<int> &local_indices,
+                                            const vector<int> &owners,
+                                            const vector<vector<int>> &remote_need_matrix,
+                                            int total_species,
+                                            int rank,
+                                            int size)
+{
+    vector<Species> metadata_cache(total_species);
+
+    for (int remote_index = 0; remote_index < total_species; ++remote_index)
+    {
+        const vector<int> &rank_needs_remote = remote_need_matrix[remote_index];
+        bool any_rank_needs_remote = false;
+        for (int need : rank_needs_remote)
+        {
+            if (need)
+            {
+                any_rank_needs_remote = true;
+                break;
+            }
+        }
+
+        if (!any_rank_needs_remote)
+        {
+            continue;
+        }
+
+        int owner = owner_of_species(remote_index, owners);
+        Species metadata = stream_species_metadata_for_phase4(local_species,
+                                                              local_indices,
+                                                              remote_index,
+                                                              owner,
+                                                              rank,
+                                                              size,
+                                                              rank_needs_remote);
+
+        if (rank_needs_remote[rank])
+        {
+            metadata_cache[remote_index] = metadata;
+        }
+    }
+
+    return metadata_cache;
+}
+
 // En cada iteracion del pipeline se envian unicamente los spaced-words del
 // patron actual y solo a los ranks que los necesitan para sus pares.
 vector<Word> stream_pattern_words_for_phase4(const vector<Species> &local_species,
@@ -976,6 +1009,13 @@ vector<vector<double>> calculate_distance_matrix_parallel(vector<Species> &local
     vector<vector<int>> remote_need_matrix = build_remote_need_matrix(total_species,
                                                                       size,
                                                                       local_indices);
+    vector<Species> remote_metadata_cache = build_remote_metadata_cache(local_species,
+                                                                        local_indices,
+                                                                        owners,
+                                                                        remote_need_matrix,
+                                                                        total_species,
+                                                                        rank,
+                                                                        size);
 
     for (int pattern_index = 0; pattern_index < static_cast<int>(patterns.size()); ++pattern_index)
     {
@@ -1010,15 +1050,9 @@ vector<vector<double>> calculate_distance_matrix_parallel(vector<Species> &local
             }
 
             // El owner conserva su especie local; los demas solo reciben datos
-            // si tienen algun par pendiente con esta especie remota.
+            // si tienen algun par pendiente con esta especie remota. La metadata
+            // ya se recibio antes del bucle de patrones.
             int owner = owner_of_species(remote_index, owners);
-            Species remote_species = stream_species_metadata_for_phase4(local_species,
-                                                                        local_indices,
-                                                                        remote_index,
-                                                                        owner,
-                                                                        rank,
-                                                                        size,
-                                                                        rank_needs_remote);
             vector<Word> remote_words = stream_pattern_words_for_phase4(local_species,
                                                                         local_indices,
                                                                         remote_index,
@@ -1043,7 +1077,7 @@ vector<vector<double>> calculate_distance_matrix_parallel(vector<Species> &local
 
                 StreamMatchState &state = pair_states[local_i * total_species + remote_index];
                 process_streamed_pattern(local_species[local_i],
-                                         remote_species,
+                                         remote_metadata_cache[remote_index],
                                          local_species[local_i].sorted_words[0],
                                          remote_words,
                                          local_run_lengths[local_i],
