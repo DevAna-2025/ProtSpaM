@@ -1,0 +1,53 @@
+==================================================
+Running block_pipeline_metacache_batch2_calcbase_55sp_np16_rep1
+Binary: ./bin/Debug/protspam_block_pipeline_metacache_batch_calcbase
+Variant: block_pipeline_metacache_batch2_calcbase
+Phase 3 distribution: block
+Phase 4 mode: pipeline_metacache_batch2
+calc_matches: calcbase
+Batch size: 2
+Filelist: filelist_55
+Species: 55
+NP: 16
+Rep: 1
+SLURM_JOB_ID: 8429557
+SLURM_JOB_NUM_NODES: 1
+SLURM_NTASKS: 64
+SLURM_MEM_PER_NODE: 65536
+SLURM_NODELIST: ilk-165
+Start: Tue Jul 14 12:23:47 AM CEST 2026
+==================================================
+-----Parameters used------
+Weight: 6
+Number of don't-care positions: 40
+Threshold: 0
+Number of patterns: 5
+Filename for distance matrix: results_variants_55/DMat_block_pipeline_metacache_batch2_calcbase_55sp_np16_rep1_8429557
+--------------------------
+
+===== ETAPA 1: Carga de patrones =====
+Cargando patrones desde archivo: patterns_clean.txt
+Patrones generados (5):
+  Pattern 0: 1000010000000100000000000000100000000000001001
+  Pattern 1: 0100001000000010000000000001000000000000010100
+  Pattern 2: 0010000100000001000000000010000000000000100010
+  Pattern 3: 0001000010000000100000000100000000000001000100
+  Pattern 4: 0000100001000000010000001000000000000010001000
+
+===== ETAPA 2: Parsing de secuencias =====
+Carpeta detectada con 55 archivos.
+Numero de especies: 55
+
+===== ETAPA 3: Calculando spaced-words con MPI =====
+Tiempo spaced-words: 55.1469 s
+
+===== ETAPA 4: Calculando matches con MPI =====
+Tiempo matches: 511.755 s
+
+===== ETAPA 5: Guardando matriz de distancias =====
+
+===== RESUMEN =====
+Tiempo total: 583.349 s
+End: Tue Jul 14 12:33:35 AM CEST 2026
+Elapsed seconds: 588
+Exit code: 0

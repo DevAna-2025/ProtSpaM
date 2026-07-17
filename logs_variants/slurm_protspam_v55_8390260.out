@@ -1,0 +1,404 @@
+slurmstepd: info: Setting TMPDIR to /scratch/8390260. Previous errors about TMPDIR can be discarded
+==================================================
+Running block_base_calcopt_55sp_np1_rep1
+Binary: ./bin/Debug/protspam_block_base_calcopt
+Variant: block_base_calcopt
+Phase 3 distribution: block
+Phase 4 mode: base
+calc_matches: calcopt
+Filelist: filelist_55
+Species: 55
+NP: 1
+Rep: 1
+SLURM_JOB_ID: 8390260
+SLURM_JOB_NUM_NODES: 1
+SLURM_NTASKS: 64
+SLURM_MEM_PER_NODE: 65536
+SLURM_NODELIST: ilk-123
+Start: Sat Jul 11 11:35:11 PM CEST 2026
+==================================================
+==================================================
+Running block_base_calcopt_55sp_np1_rep2
+Binary: ./bin/Debug/protspam_block_base_calcopt
+Variant: block_base_calcopt
+Phase 3 distribution: block
+Phase 4 mode: base
+calc_matches: calcopt
+Filelist: filelist_55
+Species: 55
+NP: 1
+Rep: 2
+SLURM_JOB_ID: 8390260
+SLURM_JOB_NUM_NODES: 1
+SLURM_NTASKS: 64
+SLURM_MEM_PER_NODE: 65536
+SLURM_NODELIST: ilk-123
+Start: Sat Jul 11 11:48:58 PM CEST 2026
+==================================================
+==================================================
+Running block_base_calcopt_55sp_np1_rep3
+Binary: ./bin/Debug/protspam_block_base_calcopt
+Variant: block_base_calcopt
+Phase 3 distribution: block
+Phase 4 mode: base
+calc_matches: calcopt
+Filelist: filelist_55
+Species: 55
+NP: 1
+Rep: 3
+SLURM_JOB_ID: 8390260
+SLURM_JOB_NUM_NODES: 1
+SLURM_NTASKS: 64
+SLURM_MEM_PER_NODE: 65536
+SLURM_NODELIST: ilk-123
+Start: Sun Jul 12 12:01:55 AM CEST 2026
+==================================================
+==================================================
+Running block_base_calcopt_55sp_np2_rep1
+Binary: ./bin/Debug/protspam_block_base_calcopt
+Variant: block_base_calcopt
+Phase 3 distribution: block
+Phase 4 mode: base
+calc_matches: calcopt
+Filelist: filelist_55
+Species: 55
+NP: 2
+Rep: 1
+SLURM_JOB_ID: 8390260
+SLURM_JOB_NUM_NODES: 1
+SLURM_NTASKS: 64
+SLURM_MEM_PER_NODE: 65536
+SLURM_NODELIST: ilk-123
+Start: Sun Jul 12 12:14:53 AM CEST 2026
+==================================================
+==================================================
+Running block_base_calcopt_55sp_np2_rep2
+Binary: ./bin/Debug/protspam_block_base_calcopt
+Variant: block_base_calcopt
+Phase 3 distribution: block
+Phase 4 mode: base
+calc_matches: calcopt
+Filelist: filelist_55
+Species: 55
+NP: 2
+Rep: 2
+SLURM_JOB_ID: 8390260
+SLURM_JOB_NUM_NODES: 1
+SLURM_NTASKS: 64
+SLURM_MEM_PER_NODE: 65536
+SLURM_NODELIST: ilk-123
+Start: Sun Jul 12 12:21:18 AM CEST 2026
+==================================================
+==================================================
+Running block_base_calcopt_55sp_np2_rep3
+Binary: ./bin/Debug/protspam_block_base_calcopt
+Variant: block_base_calcopt
+Phase 3 distribution: block
+Phase 4 mode: base
+calc_matches: calcopt
+Filelist: filelist_55
+Species: 55
+NP: 2
+Rep: 3
+SLURM_JOB_ID: 8390260
+SLURM_JOB_NUM_NODES: 1
+SLURM_NTASKS: 64
+SLURM_MEM_PER_NODE: 65536
+SLURM_NODELIST: ilk-123
+Start: Sun Jul 12 12:27:43 AM CEST 2026
+==================================================
+==================================================
+Running block_base_calcopt_55sp_np4_rep1
+Binary: ./bin/Debug/protspam_block_base_calcopt
+Variant: block_base_calcopt
+Phase 3 distribution: block
+Phase 4 mode: base
+calc_matches: calcopt
+Filelist: filelist_55
+Species: 55
+NP: 4
+Rep: 1
+SLURM_JOB_ID: 8390260
+SLURM_JOB_NUM_NODES: 1
+SLURM_NTASKS: 64
+SLURM_MEM_PER_NODE: 65536
+SLURM_NODELIST: ilk-123
+Start: Sun Jul 12 12:34:08 AM CEST 2026
+==================================================
+==================================================
+Running block_base_calcopt_55sp_np4_rep2
+Binary: ./bin/Debug/protspam_block_base_calcopt
+Variant: block_base_calcopt
+Phase 3 distribution: block
+Phase 4 mode: base
+calc_matches: calcopt
+Filelist: filelist_55
+Species: 55
+NP: 4
+Rep: 2
+SLURM_JOB_ID: 8390260
+SLURM_JOB_NUM_NODES: 1
+SLURM_NTASKS: 64
+SLURM_MEM_PER_NODE: 65536
+SLURM_NODELIST: ilk-123
+Start: Sun Jul 12 12:37:08 AM CEST 2026
+==================================================
+==================================================
+Running block_base_calcopt_55sp_np4_rep3
+Binary: ./bin/Debug/protspam_block_base_calcopt
+Variant: block_base_calcopt
+Phase 3 distribution: block
+Phase 4 mode: base
+calc_matches: calcopt
+Filelist: filelist_55
+Species: 55
+NP: 4
+Rep: 3
+SLURM_JOB_ID: 8390260
+SLURM_JOB_NUM_NODES: 1
+SLURM_NTASKS: 64
+SLURM_MEM_PER_NODE: 65536
+SLURM_NODELIST: ilk-123
+Start: Sun Jul 12 12:40:09 AM CEST 2026
+==================================================
+==================================================
+Running block_base_calcopt_55sp_np8_rep1
+Binary: ./bin/Debug/protspam_block_base_calcopt
+Variant: block_base_calcopt
+Phase 3 distribution: block
+Phase 4 mode: base
+calc_matches: calcopt
+Filelist: filelist_55
+Species: 55
+NP: 8
+Rep: 1
+SLURM_JOB_ID: 8390260
+SLURM_JOB_NUM_NODES: 1
+SLURM_NTASKS: 64
+SLURM_MEM_PER_NODE: 65536
+SLURM_NODELIST: ilk-123
+Start: Sun Jul 12 12:43:08 AM CEST 2026
+==================================================
+==================================================
+Running block_base_calcopt_55sp_np8_rep2
+Binary: ./bin/Debug/protspam_block_base_calcopt
+Variant: block_base_calcopt
+Phase 3 distribution: block
+Phase 4 mode: base
+calc_matches: calcopt
+Filelist: filelist_55
+Species: 55
+NP: 8
+Rep: 2
+SLURM_JOB_ID: 8390260
+SLURM_JOB_NUM_NODES: 1
+SLURM_NTASKS: 64
+SLURM_MEM_PER_NODE: 65536
+SLURM_NODELIST: ilk-123
+Start: Sun Jul 12 12:45:05 AM CEST 2026
+==================================================
+==================================================
+Running block_base_calcopt_55sp_np8_rep3
+Binary: ./bin/Debug/protspam_block_base_calcopt
+Variant: block_base_calcopt
+Phase 3 distribution: block
+Phase 4 mode: base
+calc_matches: calcopt
+Filelist: filelist_55
+Species: 55
+NP: 8
+Rep: 3
+SLURM_JOB_ID: 8390260
+SLURM_JOB_NUM_NODES: 1
+SLURM_NTASKS: 64
+SLURM_MEM_PER_NODE: 65536
+SLURM_NODELIST: ilk-123
+Start: Sun Jul 12 12:47:02 AM CEST 2026
+==================================================
+==================================================
+Running block_base_calcopt_55sp_np16_rep1
+Binary: ./bin/Debug/protspam_block_base_calcopt
+Variant: block_base_calcopt
+Phase 3 distribution: block
+Phase 4 mode: base
+calc_matches: calcopt
+Filelist: filelist_55
+Species: 55
+NP: 16
+Rep: 1
+SLURM_JOB_ID: 8390260
+SLURM_JOB_NUM_NODES: 1
+SLURM_NTASKS: 64
+SLURM_MEM_PER_NODE: 65536
+SLURM_NODELIST: ilk-123
+Start: Sun Jul 12 12:49:00 AM CEST 2026
+==================================================
+==================================================
+Running block_base_calcopt_55sp_np16_rep2
+Binary: ./bin/Debug/protspam_block_base_calcopt
+Variant: block_base_calcopt
+Phase 3 distribution: block
+Phase 4 mode: base
+calc_matches: calcopt
+Filelist: filelist_55
+Species: 55
+NP: 16
+Rep: 2
+SLURM_JOB_ID: 8390260
+SLURM_JOB_NUM_NODES: 1
+SLURM_NTASKS: 64
+SLURM_MEM_PER_NODE: 65536
+SLURM_NODELIST: ilk-123
+Start: Sun Jul 12 12:50:20 AM CEST 2026
+==================================================
+==================================================
+Running block_base_calcopt_55sp_np16_rep3
+Binary: ./bin/Debug/protspam_block_base_calcopt
+Variant: block_base_calcopt
+Phase 3 distribution: block
+Phase 4 mode: base
+calc_matches: calcopt
+Filelist: filelist_55
+Species: 55
+NP: 16
+Rep: 3
+SLURM_JOB_ID: 8390260
+SLURM_JOB_NUM_NODES: 1
+SLURM_NTASKS: 64
+SLURM_MEM_PER_NODE: 65536
+SLURM_NODELIST: ilk-123
+Start: Sun Jul 12 12:51:40 AM CEST 2026
+==================================================
+==================================================
+Running block_base_calcopt_55sp_np32_rep1
+Binary: ./bin/Debug/protspam_block_base_calcopt
+Variant: block_base_calcopt
+Phase 3 distribution: block
+Phase 4 mode: base
+calc_matches: calcopt
+Filelist: filelist_55
+Species: 55
+NP: 32
+Rep: 1
+SLURM_JOB_ID: 8390260
+SLURM_JOB_NUM_NODES: 1
+SLURM_NTASKS: 64
+SLURM_MEM_PER_NODE: 65536
+SLURM_NODELIST: ilk-123
+Start: Sun Jul 12 12:53:00 AM CEST 2026
+==================================================
+==================================================
+Running block_base_calcopt_55sp_np32_rep2
+Binary: ./bin/Debug/protspam_block_base_calcopt
+Variant: block_base_calcopt
+Phase 3 distribution: block
+Phase 4 mode: base
+calc_matches: calcopt
+Filelist: filelist_55
+Species: 55
+NP: 32
+Rep: 2
+SLURM_JOB_ID: 8390260
+SLURM_JOB_NUM_NODES: 1
+SLURM_NTASKS: 64
+SLURM_MEM_PER_NODE: 65536
+SLURM_NODELIST: ilk-123
+Start: Sun Jul 12 12:53:49 AM CEST 2026
+==================================================
+==================================================
+Running block_base_calcopt_55sp_np32_rep3
+Binary: ./bin/Debug/protspam_block_base_calcopt
+Variant: block_base_calcopt
+Phase 3 distribution: block
+Phase 4 mode: base
+calc_matches: calcopt
+Filelist: filelist_55
+Species: 55
+NP: 32
+Rep: 3
+SLURM_JOB_ID: 8390260
+SLURM_JOB_NUM_NODES: 1
+SLURM_NTASKS: 64
+SLURM_MEM_PER_NODE: 65536
+SLURM_NODELIST: ilk-123
+Start: Sun Jul 12 12:54:39 AM CEST 2026
+==================================================
+==================================================
+Running block_base_calcopt_55sp_np64_rep1
+Binary: ./bin/Debug/protspam_block_base_calcopt
+Variant: block_base_calcopt
+Phase 3 distribution: block
+Phase 4 mode: base
+calc_matches: calcopt
+Filelist: filelist_55
+Species: 55
+NP: 64
+Rep: 1
+SLURM_JOB_ID: 8390260
+SLURM_JOB_NUM_NODES: 1
+SLURM_NTASKS: 64
+SLURM_MEM_PER_NODE: 65536
+SLURM_NODELIST: ilk-123
+Start: Sun Jul 12 12:55:29 AM CEST 2026
+==================================================
+==================================================
+Running block_base_calcopt_55sp_np64_rep2
+Binary: ./bin/Debug/protspam_block_base_calcopt
+Variant: block_base_calcopt
+Phase 3 distribution: block
+Phase 4 mode: base
+calc_matches: calcopt
+Filelist: filelist_55
+Species: 55
+NP: 64
+Rep: 2
+SLURM_JOB_ID: 8390260
+SLURM_JOB_NUM_NODES: 1
+SLURM_NTASKS: 64
+SLURM_MEM_PER_NODE: 65536
+SLURM_NODELIST: ilk-123
+Start: Sun Jul 12 12:56:11 AM CEST 2026
+==================================================
+==================================================
+Running block_base_calcopt_55sp_np64_rep3
+Binary: ./bin/Debug/protspam_block_base_calcopt
+Variant: block_base_calcopt
+Phase 3 distribution: block
+Phase 4 mode: base
+calc_matches: calcopt
+Filelist: filelist_55
+Species: 55
+NP: 64
+Rep: 3
+SLURM_JOB_ID: 8390260
+SLURM_JOB_NUM_NODES: 1
+SLURM_NTASKS: 64
+SLURM_MEM_PER_NODE: 65536
+SLURM_NODELIST: ilk-123
+Start: Sun Jul 12 12:56:53 AM CEST 2026
+==================================================
+==================================================
+Resumen guardado en: logs_variants_55/resumen_block_base_calcopt_8390260.tsv
+==================================================
+variant	bin_name	phase3_dist	phase4_mode	calc_variant	job_id	nodes	ntasks_alloc	species	np	rep	status	exit_code	t_phase3_s	t_phase4_s	t_total_program_s	elapsed_seconds	mem_per_node	nodelist	log_file	output_file
+block_base_calcopt	protspam_block_base_calcopt	block	base	calcopt	8390260	1	64	55	1	1	FAIL	137	NA	NA	NA	827	65536	ilk-123	logs_variants_55/block_base_calcopt_55sp_np1_rep1_8390260.log	results_variants_55/DMat_block_base_calcopt_55sp_np1_rep1_8390260
+block_base_calcopt	protspam_block_base_calcopt	block	base	calcopt	8390260	1	64	55	1	2	FAIL	137	NA	NA	NA	777	65536	ilk-123	logs_variants_55/block_base_calcopt_55sp_np1_rep2_8390260.log	results_variants_55/DMat_block_base_calcopt_55sp_np1_rep2_8390260
+block_base_calcopt	protspam_block_base_calcopt	block	base	calcopt	8390260	1	64	55	1	3	FAIL	137	NA	NA	NA	778	65536	ilk-123	logs_variants_55/block_base_calcopt_55sp_np1_rep3_8390260.log	results_variants_55/DMat_block_base_calcopt_55sp_np1_rep3_8390260
+block_base_calcopt	protspam_block_base_calcopt	block	base	calcopt	8390260	1	64	55	2	1	FAIL	137	NA	NA	NA	385	65536	ilk-123	logs_variants_55/block_base_calcopt_55sp_np2_rep1_8390260.log	results_variants_55/DMat_block_base_calcopt_55sp_np2_rep1_8390260
+block_base_calcopt	protspam_block_base_calcopt	block	base	calcopt	8390260	1	64	55	2	2	FAIL	137	NA	NA	NA	385	65536	ilk-123	logs_variants_55/block_base_calcopt_55sp_np2_rep2_8390260.log	results_variants_55/DMat_block_base_calcopt_55sp_np2_rep2_8390260
+block_base_calcopt	protspam_block_base_calcopt	block	base	calcopt	8390260	1	64	55	2	3	FAIL	137	NA	NA	NA	385	65536	ilk-123	logs_variants_55/block_base_calcopt_55sp_np2_rep3_8390260.log	results_variants_55/DMat_block_base_calcopt_55sp_np2_rep3_8390260
+block_base_calcopt	protspam_block_base_calcopt	block	base	calcopt	8390260	1	64	55	4	1	FAIL	137	NA	NA	NA	180	65536	ilk-123	logs_variants_55/block_base_calcopt_55sp_np4_rep1_8390260.log	results_variants_55/DMat_block_base_calcopt_55sp_np4_rep1_8390260
+block_base_calcopt	protspam_block_base_calcopt	block	base	calcopt	8390260	1	64	55	4	2	FAIL	137	NA	NA	NA	181	65536	ilk-123	logs_variants_55/block_base_calcopt_55sp_np4_rep2_8390260.log	results_variants_55/DMat_block_base_calcopt_55sp_np4_rep2_8390260
+block_base_calcopt	protspam_block_base_calcopt	block	base	calcopt	8390260	1	64	55	4	3	FAIL	137	NA	NA	NA	179	65536	ilk-123	logs_variants_55/block_base_calcopt_55sp_np4_rep3_8390260.log	results_variants_55/DMat_block_base_calcopt_55sp_np4_rep3_8390260
+block_base_calcopt	protspam_block_base_calcopt	block	base	calcopt	8390260	1	64	55	8	1	FAIL	137	NA	NA	NA	117	65536	ilk-123	logs_variants_55/block_base_calcopt_55sp_np8_rep1_8390260.log	results_variants_55/DMat_block_base_calcopt_55sp_np8_rep1_8390260
+block_base_calcopt	protspam_block_base_calcopt	block	base	calcopt	8390260	1	64	55	8	2	FAIL	137	NA	NA	NA	117	65536	ilk-123	logs_variants_55/block_base_calcopt_55sp_np8_rep2_8390260.log	results_variants_55/DMat_block_base_calcopt_55sp_np8_rep2_8390260
+block_base_calcopt	protspam_block_base_calcopt	block	base	calcopt	8390260	1	64	55	8	3	FAIL	137	NA	NA	NA	118	65536	ilk-123	logs_variants_55/block_base_calcopt_55sp_np8_rep3_8390260.log	results_variants_55/DMat_block_base_calcopt_55sp_np8_rep3_8390260
+block_base_calcopt	protspam_block_base_calcopt	block	base	calcopt	8390260	1	64	55	16	1	FAIL	137	NA	NA	NA	80	65536	ilk-123	logs_variants_55/block_base_calcopt_55sp_np16_rep1_8390260.log	results_variants_55/DMat_block_base_calcopt_55sp_np16_rep1_8390260
+block_base_calcopt	protspam_block_base_calcopt	block	base	calcopt	8390260	1	64	55	16	2	FAIL	137	NA	NA	NA	80	65536	ilk-123	logs_variants_55/block_base_calcopt_55sp_np16_rep2_8390260.log	results_variants_55/DMat_block_base_calcopt_55sp_np16_rep2_8390260
+block_base_calcopt	protspam_block_base_calcopt	block	base	calcopt	8390260	1	64	55	16	3	FAIL	137	NA	NA	NA	80	65536	ilk-123	logs_variants_55/block_base_calcopt_55sp_np16_rep3_8390260.log	results_variants_55/DMat_block_base_calcopt_55sp_np16_rep3_8390260
+block_base_calcopt	protspam_block_base_calcopt	block	base	calcopt	8390260	1	64	55	32	1	FAIL	137	NA	NA	NA	49	65536	ilk-123	logs_variants_55/block_base_calcopt_55sp_np32_rep1_8390260.log	results_variants_55/DMat_block_base_calcopt_55sp_np32_rep1_8390260
+block_base_calcopt	protspam_block_base_calcopt	block	base	calcopt	8390260	1	64	55	32	2	FAIL	137	NA	NA	NA	50	65536	ilk-123	logs_variants_55/block_base_calcopt_55sp_np32_rep2_8390260.log	results_variants_55/DMat_block_base_calcopt_55sp_np32_rep2_8390260
+block_base_calcopt	protspam_block_base_calcopt	block	base	calcopt	8390260	1	64	55	32	3	FAIL	137	NA	NA	NA	50	65536	ilk-123	logs_variants_55/block_base_calcopt_55sp_np32_rep3_8390260.log	results_variants_55/DMat_block_base_calcopt_55sp_np32_rep3_8390260
+block_base_calcopt	protspam_block_base_calcopt	block	base	calcopt	8390260	1	64	55	64	1	FAIL	137	NA	NA	NA	42	65536	ilk-123	logs_variants_55/block_base_calcopt_55sp_np64_rep1_8390260.log	results_variants_55/DMat_block_base_calcopt_55sp_np64_rep1_8390260
+block_base_calcopt	protspam_block_base_calcopt	block	base	calcopt	8390260	1	64	55	64	2	FAIL	137	NA	NA	NA	41	65536	ilk-123	logs_variants_55/block_base_calcopt_55sp_np64_rep2_8390260.log	results_variants_55/DMat_block_base_calcopt_55sp_np64_rep2_8390260
+block_base_calcopt	protspam_block_base_calcopt	block	base	calcopt	8390260	1	64	55	64	3	FAIL	137	NA	NA	NA	43	65536	ilk-123	logs_variants_55/block_base_calcopt_55sp_np64_rep3_8390260.log	results_variants_55/DMat_block_base_calcopt_55sp_np64_rep3_8390260
