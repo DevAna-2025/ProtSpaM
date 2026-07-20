@@ -1,5 +1,0 @@
-slurmstepd: info: Setting TMPDIR to /scratch/8413201. Previous errors about TMPDIR can be discarded
-ERROR: executable not found or not executable: ./bin/Debug/protspam_block_pipeline_metacache_idxmap_batch_calcbase
-Run first:
-  make clean
-  make variants
