@@ -1,8 +1,9 @@
-# ProtSpaM-MPI - Fase 4
+# ProtSpaM-MPI - Fase 4 (variante: metacache)
 
-Extension con MPI de **Prot-SpaM**, desarrollada como parte del TFM en Computacion de Altas Prestaciones.
+Extensión con MPI de **Prot-SpaM**, desarrollada como parte del TFM en Computación de Altas Prestaciones.
 
-Esta carpeta contiene la version usada para el avance de la fase 4. 
+Esta rama contiene la variante **metacache** de la Fase 4, base sobre la que se construyen el resto de optimizaciones (`isend`, `metacache_calcopt`, `isend_calcopt`).
+
 
 ## Proyecto original
 
@@ -15,21 +16,29 @@ Repositorio original:
 
 https://github.com/jschellh/ProtSpaM
 
-## Cambios principales de esta fase
+## Cambios respecto a la Fase 3 (variante metacache)
 
-### Fase 3
+Esta rama parte de **`feat/mpi-phase3-a`** (lectura centralizada: rank 0 lee
+todas las especies y las reparte) como base, y anade la paralelización de la
+Fase 4 (cálculo de matches y matriz de distancias):
 
-- Las especies se distribuyen entre procesos MPI.
-- El reparto se balancea usando el tamano de las secuencias.
-- Cada proceso calcula los spaced-words de sus especies locales.
-
-### Fase 4
-
-- Los pares de especies se calculan en paralelo.
-- Los spaced-words se procesan patron por patron para reducir memoria.
-- En multinodo se evita enviar datos remotos a procesos que no los necesitan.
-- Se precalculan posiciones don't-care y bloques de spaced-words con la misma clave para reducir trabajo repetido en `calc_matches`.
-- El programa imprime tiempos separados para fase 3, fase 4 y tiempo total.
+- Cada especie tiene un proceso propietario; los demas procesos reciben sus
+  datos solo si los necesitan para algun par pendiente.
+  
+- La metadata de cada especie remota (cabecera, secuencia y posiciones de
+  inicio) se envia **una sola vez por especie**, antes del bucle de patrones,
+  y se guarda en una tabla en memoria (`remote_metadata_cache`) para no
+  reenviarla en cada uno de los 5 patrones.
+  
+- Antes de comunicar nada se calcula que procesos necesitan realmente cada
+  especie remota, y solo se envia a esos procesos.
+  
+- Los spaced-words (que si cambian en cada patron) se recalculan y comunican
+  patron a patron, descartando los del patron anterior para no acumular
+  memoria.
+  
+- La comunicacion de metadata y de spaced-words usa `MPI_Send`/`MPI_Recv`
+  bloqueante. Este ultimo punto es el que cambia en la variante `isend`.
 
 ## Requisitos
 
@@ -73,16 +82,20 @@ filelist_20
 filelist_30
 filelist_50
 filelist_55
+filelist_64
 ```
 
-No se uso `filelist_40` en el informe de avance.
+No se uso `filelist_40` en el informe de avance. `filelist_64` es un conjunto
+balanceado de 64 especies (sin la especie de mayor tamaño ni las de menor
+tamano del conjunto original), usado en el benchmark de escalabilidad mas
+reciente (ver `filelists/README.md` para el detalle de su construccion).
 
 ## Ejecucion manual
 
 Ejemplo:
 
 ```bash
-mpirun -np 4 ./bin/Debug/protspam \
+mpirun -np 4 ./bin/Debug/protspam_metacache \
     -l filelist_20 \
     -p patterns_clean.txt \
     -o DMat_20sp_np4
@@ -133,6 +146,11 @@ run_species_set 50 filelist_50
 run_species_set 55 filelist_55
 ```
 
+Esta variante se ejecuto ademas, con `filelist_64` (conjunto balanceado, 64
+especies), evaluando np = 1, 2, 4, 8, 16, 32 y 64 en un unico nodo (ver
+tambien la seccion "Multinodo" para la misma variante ejecutada en varios
+nodos).
+
 Salida principal:
 
 ```text
@@ -143,63 +161,43 @@ results_phase4_single_64g/DMat_*
 
 ### Multinodo
 
-El benchmark multinodo se ejecuto lanzando el mismo script varias veces, cambiando los parametros de SLURM para reflejar el numero de nodos. El script guarda `SLURM_JOB_NUM_NODES`, `SLURM_NTASKS`, `ntasks_per_node` y `SLURM_NODELIST` en el resumen TSV.
+El benchmark multinodo del conjunto balanceado (`filelist_64`) se ejecuto con
+una densidad fija de 32 procesos por nodo, variando el numero de nodos: 1, 2,
+4 y 8 nodos (equivalentes a 32, 64, 128 y 256 procesos totales). El reparto de
+procesos por nodo se controla con `mpirun --map-by ppr:32:node`.
 
 Crear carpetas:
 
 ```bash
-mkdir -p logs_phase4_nodes_allnp_64g results_phase4_nodes_allnp_64g
+mkdir -p logs_multinodo results_multinodo
 ```
 
-Comandos usados para reflejar distintos numeros de nodos:
+Ejecutar:
 
 ```bash
-sbatch --nodes=1 --ntasks=32 --ntasks-per-node=32 run_phase4_nodes.sbatch
-
-sbatch --nodes=2 --ntasks=32 --ntasks-per-node=16 run_phase4_nodes.sbatch
-
-sbatch --nodes=4 --ntasks=32 --ntasks-per-node=8 run_phase4_nodes.sbatch
-
-sbatch --nodes=8 --ntasks=32 --ntasks-per-node=4 run_phase4_nodes.sbatch
+sbatch run_benchmark_multinodo.sbatch
 ```
 
 Configuracion usada:
 
 ```text
+Nodos evaluados: 1, 2, 4, 8
+Procesos por nodo (PPN): 32
 Memoria: 64 GB por nodo
-Procesos MPI evaluados dentro del script: 1, 2, 4, 8, 16, 32
-Repeticiones: 5
+Repeticiones: 3
 ```
 
-Datasets ejecutados en el script:
-
-```bash
-run_species_set 10 filelist_10
-run_species_set 20 filelist_20
-run_species_set 30 filelist_30
-run_species_set 50 filelist_50
-run_species_set 55 filelist_55
-```
+Dataset ejecutado en el script: `filelist_64` (conjunto balanceado de 64
+especies).
 
 Salida principal:
 
 ```text
-logs_phase4_nodes_allnp_64g/resumen_nodes<N>_allnp_64g_<job_id>.tsv
-logs_phase4_nodes_allnp_64g/*.log
-results_phase4_nodes_allnp_64g/DMat_*
+logs_multinodo/resumen_multinodo_<job_id>.tsv
+logs_multinodo/*.log
+results_multinodo/DMat_*
 ```
 
-Donde `<N>` corresponde al numero de nodos asignado por SLURM.
-
-## Resultados generados
-
-Cada ejecucion genera:
-
-- una matriz de distancias `DMat_*`;
-- un log individual;
-- una fila en un TSV resumen con estado, codigo de salida, tiempo de fase 3, tiempo de fase 4, tiempo total y tiempo real de ejecucion.
-
-Los TSV finales usados para el informe de avance corresponden a ejecuciones con 10, 20, 30, 50 y 55 especies, 64 GB de memoria por nodo y 5 repeticiones por configuracion.
 
 ## Estructura principal
 
@@ -207,7 +205,7 @@ Los TSV finales usados para el informe de avance corresponden a ejecuciones con 
 .
 |-- include/
 |-- src/
-|-- data/
+|-- data/                          (vacio en el repo; ver Preparacion de datos)
 |-- main.cpp
 |-- Makefile
 |-- filelist_10
@@ -215,9 +213,12 @@ Los TSV finales usados para el informe de avance corresponden a ejecuciones con 
 |-- filelist_30
 |-- filelist_50
 |-- filelist_55
+|-- filelist_64
 |-- patterns_clean.txt
 |-- run_phase4_single.sbatch
-|-- run_phase4_nodes.sbatch
+|-- run_benchmark_multinodo.sbatch
+|-- logs_phase4_single_64g/         (logs y TSV resumen; sin DMat_*)
+|-- logs_multinodo/                 (logs y TSV resumen; sin DMat_*)
 |-- README.md
 |-- COPYING
 ```
