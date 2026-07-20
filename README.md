@@ -2,7 +2,7 @@
 
 Extensión con MPI de **Prot-SpaM**, desarrollada como parte del TFM en Computación de Altas Prestaciones.
 
-Esta rama contiene la variante **metacache** de la Fase 4, base sobre la que se construyen el resto de optimizaciones (`isend`, `metacache_calcopt`, `isend_calcopt`).
+Esta rama contiene la variante **metacache** de la Fase 4, base sobre la que se construyen el resto de optimizaciones.
 
 
 ## Proyecto original
