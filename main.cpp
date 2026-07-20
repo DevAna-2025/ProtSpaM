@@ -245,6 +245,144 @@ vector<Word> recv_words(int source)
     return words;
 }
 
+// ---------------------------------------------------------------------------
+// Envio no bloqueante multi-destino (fix de comunicacion de fase 4).
+//
+// Problema original: cuando un rank es "owner" de una especie, enviaba sus
+// datos a cada destino con MPI_Send bloqueante, uno detras de otro. Con
+// mensajes grandes MPI usa rendezvous (el Send no vuelve hasta que el receptor
+// posta su Recv), asi que el owner quedaba esperando a cada destino en fila.
+//
+// Solucion: lanzar todos los Isend de una tanda (mismo dato, varios destinos)
+// sin esperar entre ellos, acumular los MPI_Request y hacer un unico Waitall al
+// final. Asi el progreso de todos los envios ocurre en paralelo. Los buffers se
+// guardan en la estructura PendingSend y deben seguir vivos hasta el Waitall,
+// porque Isend no garantiza haber copiado el contenido al retornar.
+// ---------------------------------------------------------------------------
+
+struct PendingSend
+{
+    vector<MPI_Request> requests;
+    vector<int> size_buffer;
+    vector<char> char_buffer;
+    vector<int> int_buffer;
+    vector<unsigned long long> key_buffer;
+    vector<unsigned int> pos_buffer;
+};
+
+void isend_string_multi(const string &value, const vector<int> &dests, int tag, PendingSend &pending)
+{
+    pending.size_buffer.assign(1, static_cast<int>(value.size()));
+    pending.char_buffer.assign(value.begin(), value.end());
+
+    for (int dest : dests)
+    {
+        MPI_Request req_size;
+        MPI_Isend(pending.size_buffer.data(), 1, MPI_INT, dest, tag, MPI_COMM_WORLD, &req_size);
+        pending.requests.push_back(req_size);
+
+        if (!pending.char_buffer.empty())
+        {
+            MPI_Request req_data;
+            MPI_Isend(pending.char_buffer.data(), static_cast<int>(pending.char_buffer.size()),
+                      MPI_CHAR, dest, tag, MPI_COMM_WORLD, &req_data);
+            pending.requests.push_back(req_data);
+        }
+    }
+}
+
+void isend_char_vector_multi(const vector<char> &values, const vector<int> &dests, int tag, PendingSend &pending)
+{
+    pending.size_buffer.assign(1, static_cast<int>(values.size()));
+    pending.char_buffer = values;
+
+    for (int dest : dests)
+    {
+        MPI_Request req_size;
+        MPI_Isend(pending.size_buffer.data(), 1, MPI_INT, dest, tag, MPI_COMM_WORLD, &req_size);
+        pending.requests.push_back(req_size);
+
+        if (!pending.char_buffer.empty())
+        {
+            MPI_Request req_data;
+            MPI_Isend(pending.char_buffer.data(), static_cast<int>(pending.char_buffer.size()),
+                      MPI_CHAR, dest, tag, MPI_COMM_WORLD, &req_data);
+            pending.requests.push_back(req_data);
+        }
+    }
+}
+
+void isend_int_vector_multi(const vector<int> &values, const vector<int> &dests, int tag, PendingSend &pending)
+{
+    pending.size_buffer.assign(1, static_cast<int>(values.size()));
+    pending.int_buffer = values;
+
+    for (int dest : dests)
+    {
+        MPI_Request req_size;
+        MPI_Isend(pending.size_buffer.data(), 1, MPI_INT, dest, tag, MPI_COMM_WORLD, &req_size);
+        pending.requests.push_back(req_size);
+
+        if (!pending.int_buffer.empty())
+        {
+            MPI_Request req_data;
+            MPI_Isend(pending.int_buffer.data(), static_cast<int>(pending.int_buffer.size()),
+                      MPI_INT, dest, tag, MPI_COMM_WORLD, &req_data);
+            pending.requests.push_back(req_data);
+        }
+    }
+}
+
+void isend_species_multi(const Species &species, const vector<int> &dests, int tag,
+                         PendingSend &pending_header, PendingSend &pending_seq, PendingSend &pending_starts)
+{
+    isend_string_multi(species.header, dests, tag, pending_header);
+    isend_char_vector_multi(species.seq, dests, tag, pending_seq);
+    isend_int_vector_multi(species.starts, dests, tag, pending_starts);
+}
+
+void isend_words_multi(const vector<Word> &words, const vector<int> &dests, int tag, PendingSend &pending)
+{
+    int word_count = static_cast<int>(words.size());
+    pending.size_buffer.assign(1, word_count);
+
+    pending.key_buffer.resize(word_count);
+    pending.pos_buffer.resize(word_count);
+    for (int i = 0; i < word_count; ++i)
+    {
+        pending.key_buffer[i] = words[i].key;
+        pending.pos_buffer[i] = words[i].pos;
+    }
+
+    for (int dest : dests)
+    {
+        MPI_Request req_count;
+        MPI_Isend(pending.size_buffer.data(), 1, MPI_INT, dest, tag, MPI_COMM_WORLD, &req_count);
+        pending.requests.push_back(req_count);
+
+        if (word_count > 0)
+        {
+            MPI_Request req_keys;
+            MPI_Isend(pending.key_buffer.data(), word_count, MPI_UNSIGNED_LONG_LONG,
+                      dest, tag, MPI_COMM_WORLD, &req_keys);
+            pending.requests.push_back(req_keys);
+
+            MPI_Request req_pos;
+            MPI_Isend(pending.pos_buffer.data(), word_count, MPI_UNSIGNED,
+                      dest, tag, MPI_COMM_WORLD, &req_pos);
+            pending.requests.push_back(req_pos);
+        }
+    }
+}
+
+void wait_all_pending(PendingSend &pending)
+{
+    if (!pending.requests.empty())
+    {
+        MPI_Waitall(static_cast<int>(pending.requests.size()), pending.requests.data(), MPI_STATUSES_IGNORE);
+    }
+}
+
 // Los patrones se generan o cargan en rank 0 y se difunden al resto. Asi todos
 // los procesos trabajan con la misma configuracion, independientemente del nodo
 // en el que se ejecuten.
@@ -877,13 +1015,27 @@ Species stream_species_metadata_for_phase4(const vector<Species> &local_species,
         auto it = find(local_indices.begin(), local_indices.end(), global_index);
         const Species &local = local_species[it - local_indices.begin()];
         Species metadata = clone_species_metadata(local);
+
+        vector<int> dests;
         for (int dest = 0; dest < size; ++dest)
         {
             if (dest != owner && rank_needs_remote[dest])
             {
-                send_species(metadata, dest);
+                dests.push_back(dest);
             }
         }
+
+        if (!dests.empty())
+        {
+            PendingSend pending_header;
+            PendingSend pending_seq;
+            PendingSend pending_starts;
+            isend_species_multi(metadata, dests, TAG_SPECIES, pending_header, pending_seq, pending_starts);
+            wait_all_pending(pending_header);
+            wait_all_pending(pending_seq);
+            wait_all_pending(pending_starts);
+        }
+
         return metadata;
     }
 
@@ -960,12 +1112,20 @@ vector<Word> stream_pattern_words_for_phase4(const vector<Species> &local_specie
         const Species &local = local_species[it - local_indices.begin()];
         const vector<Word> &words = local.sorted_words[0];
 
+        vector<int> dests;
         for (int dest = 0; dest < size; ++dest)
         {
             if (dest != owner && rank_needs_remote[dest])
             {
-                send_words(words, dest);
+                dests.push_back(dest);
             }
+        }
+
+        if (!dests.empty())
+        {
+            PendingSend pending;
+            isend_words_multi(words, dests, TAG_WORDS, pending);
+            wait_all_pending(pending);
         }
 
         return words;
