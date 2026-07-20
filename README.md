@@ -47,7 +47,8 @@ Ejecutable:
 
 Antes de ejecutar el programa, crea un directorio `data/` y coloca los archivos FASTA según las rutas especificadas en el `filelist` correspondiente.
 
-Los conjuntos de datos FASTA no están incluidos en este repositorio. Los archivos listados en `filelist_10`, `filelist_20` y `filelist_30` deben existir antes de ejecutar los experimentos.
+Los conjuntos de datos FASTA no están incluidos en este repositorio, Fueron utilizados los archivos referenciados en el repositorio original, veáse el enlace del conjunto de datos [aquí](http://projects.gobics.de/data/protspam/paperData.tgz) . 
+Los archivos listados en `filelist_10`, `filelist_20` y `filelist_30` deben existir antes de ejecutar los experimentos.
 
 Ejemplo:
 
