@@ -51,7 +51,7 @@ make
 El ejecutable queda en:
 
 ```text
-./bin/Debug/protspam
+./bin/Debug/protspam_block_pipeline_metacache_calcbase
 ```
 
 ## Preparacion de datos
@@ -86,7 +86,7 @@ reciente ( [ver](https://github.com/DevAna-2025/ProtSpaM/blob/feat/mpi-phase4-me
 Ejemplo:
 
 ```bash
-mpirun -np 4 ./bin/Debug/protspam_metacache \
+mpirun -np 4 ./bin/Debug/protspam_block_pipeline_metacache_calcbase \
     -l filelist_20 \
     -p patterns_clean.txt \
     -o DMat_20sp_np4
@@ -104,18 +104,23 @@ Tiempo total
 
 Antes de ejecutar los batch scripts es necesario crear las carpetas donde se escribiran logs y matrices de salida. Si las carpetas no existen, SLURM puede fallar al abrir los archivos indicados en `#SBATCH --output` y `#SBATCH --error`.
 
-### Un nodo
+### Un nodo (filelist_55)
 
-Crear carpetas:
+El script `run_variant_55.sbatch` es generico: recibe el binario y la
+combinacion de variante como argumentos, de forma que una misma llamada
+`sbatch` ejecuta unicamente la variante indicada. Para esta rama
+(`metacache`) se uso:
+
+Crear carpetas (las crea tambien el propio script si no existen):
 
 ```bash
-mkdir -p logs_phase4_single_64g results_phase4_single_64g
+mkdir -p logs_variants_55 results_variants_55
 ```
 
 Ejecutar:
 
 ```bash
-sbatch run_phase4_single.sbatch
+sbatch run_variant_55.sbatch protspam_block_pipeline_metacache_calcbase block pipeline calcbase
 ```
 
 Configuracion usada:
@@ -123,31 +128,61 @@ Configuracion usada:
 ```text
 Nodos: 1
 Memoria: 64 GB
-Procesos MPI evaluados: 1, 2, 4, 8, 16, 32
-Repeticiones: 5
+Filelist: filelist_55
+Procesos MPI evaluados: 1, 2, 4, 8, 16, 32, 64
+Repeticiones: 3
 ```
 
-Datasets ejecutados en el script:
+Salida principal (nombrada con el prefijo de esta variante):
 
-```bash
-run_species_set 10 filelist_10
-run_species_set 20 filelist_20
-run_species_set 30 filelist_30
-run_species_set 50 filelist_50
-run_species_set 55 filelist_55
+```text
+logs_variants_55/resumen_block_pipeline_calcbase_<job_id>.tsv
+logs_variants_55/block_pipeline_calcbase_55sp_np*_rep*_<job_id>.log
+results_variants_55/DMat_block_pipeline_calcbase_55sp_np*_rep*_<job_id>
 ```
+
+### Un nodo (filelist_64)
 
 Esta variante se ejecuto ademas, con `filelist_64` (conjunto balanceado, 64
 especies), evaluando np = 1, 2, 4, 8, 16, 32 y 64 en un unico nodo (ver
 tambien la seccion "Multinodo" para la misma variante ejecutada en varios
 nodos).
 
-Salida principal:
+El script `run_benchmark_64.sbatch` evalua en una misma ejecucion las
+variantes `metacache`, `isend` e `isend_opt`, para optimizar el uso del
+cluster. Los logs, resultados y filas del TSV resumen incluidos en esta rama
+corresponden unicamente a la variante `metacache` (ficheros con prefijo
+`metacache_`, columna `variante = metacache` en el TSV); las otras variantes
+se documentan en sus ramas correspondientes.
+
+Crear carpetas:
+
+```bash
+mkdir -p logs_bench64 results_bench64
+```
+
+Ejecutar:
+
+```bash
+sbatch run_benchmark_64.sbatch
+```
+
+Configuracion usada:
 
 ```text
-logs_phase4_single_64g/resumen_single_64g_<job_id>.tsv
-logs_phase4_single_64g/*.log
-results_phase4_single_64g/DMat_*
+Nodos: 1
+Memoria: 64 GB
+Filelist: filelist_64
+Procesos MPI evaluados: 1, 2, 4, 8, 16, 32, 64
+Repeticiones: 3
+```
+
+Salida principal (filtrada a esta variante, prefijo `metacache_`):
+
+```text
+logs_bench64/resumen_bench64_<job_id>.tsv
+logs_bench64/metacache_64sp_np*_rep*_<job_id>.log
+results_bench64/DMat_metacache_64sp_np*_rep*_<job_id>
 ```
 
 ### Multinodo
@@ -156,6 +191,13 @@ El benchmark multinodo del conjunto balanceado (`filelist_64`) se ejecuto con
 una densidad fija de 32 procesos por nodo, variando el numero de nodos: 1, 2,
 4 y 8 nodos (equivalentes a 32, 64, 128 y 256 procesos totales). El reparto de
 procesos por nodo se controla con `mpirun --map-by ppr:32:node`.
+
+El script `run_benchmark_multinodo.sbatch` evalua en una misma ejecucion las
+variantes `metacache`, `isend` e `isend_opt`, para optimizar el uso del
+cluster. Los logs, resultados y filas del TSV resumen incluidos en esta rama
+corresponden unicamente a la variante `metacache` (ficheros con prefijo
+`metacache_`, columna `variante = metacache` en el TSV); las otras variantes
+se documentan en sus ramas correspondientes.
 
 Crear carpetas:
 
@@ -174,19 +216,18 @@ Configuracion usada:
 ```text
 Nodos evaluados: 1, 2, 4, 8
 Procesos por nodo (PPN): 32
+Procesos totales evaluados: 32, 64, 128, 256
 Memoria: 64 GB por nodo
+Filelist: filelist_64
 Repeticiones: 3
 ```
 
-Dataset ejecutado en el script: `filelist_64` (conjunto balanceado de 64
-especies).
-
-Salida principal:
+Salida principal (filtrada a esta variante, prefijo `metacache_`):
 
 ```text
 logs_multinodo/resumen_multinodo_<job_id>.tsv
-logs_multinodo/*.log
-results_multinodo/DMat_*
+logs_multinodo/metacache_64sp_*nodos_np*_rep*_<job_id>.log
+results_multinodo/DMat_metacache_64sp_*nodos_np*_rep*_<job_id>
 ```
 
 
@@ -206,10 +247,12 @@ results_multinodo/DMat_*
 |-- filelist_55
 |-- filelist_64
 |-- patterns_clean.txt
-|-- run_phase4_single.sbatch
+|-- run_variant_55.sbatch
+|-- run_benchmark_64.sbatch
 |-- run_benchmark_multinodo.sbatch
-|-- logs_phase4_single_64g/         
-|-- logs_multinodo/                 
+|-- logs_variants_55/               (solo ficheros con prefijo metacache_)
+|-- logs_bench64/                   (solo ficheros con prefijo metacache_)
+|-- logs_multinodo/                 (solo ficheros con prefijo metacache_)
 |-- README.md
 |-- README_FILELIST.md
 |-- COPYING
