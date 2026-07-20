@@ -1,8 +1,8 @@
-# ProtSpaM-MPI - Fase 4 (variante: isend)
+# ProtSpaM-MPI - Fase 4 (variante: isend_calcopt)
 
 Extensión con MPI de **Prot-SpaM**, desarrollada como parte del TFM en Computación de Altas Prestaciones.
 
-Esta rama contiene la variante **isend** de la Fase 4: parte de `metacache` y sustituye su comunicación bloqueante por un envío no bloqueante.
+Esta rama contiene la variante **isend_calcopt** de la Fase 4: parte de `isend` y optimiza ademas el calculo de matches (`calc_matches`) usado en la ejecucion con un unico proceso.
 
 
 ## Proyecto original
@@ -18,29 +18,39 @@ https://github.com/jschellh/ProtSpaM
 
 ## Características:
 
-Esta rama parte de **`metacache`** (rama `feat/mpi-phase4-metacache`) como
-base, que a su vez parte de `feat/mpi-phase3-a` (lectura centralizada). De
-metacache se conserva todo: la metadata en cache por especie, el envio
-selectivo y el streaming de spaced-words por patron (ver el README de
-`metacache` para el detalle). El unico cambio es como se envian esos datos:
+Esta rama parte de **`isend`** (rama `feat/mpi-phase4-metacache-isend`) como base, que
+a su vez parte de `metacache` (`feat/mpi-phase4-metacache`), que a su vez
+parte de `feat/mpi-phase3-a` (lectura centralizada). De `isend` se conserva
+todo: la metadata en cache por especie, el envio selectivo, el streaming de
+spaced-words por patron y el envio no bloqueante (`MPI_Isend` + `MPI_Waitall`)
+al comunicar datos a varios destinos (ver los README de `metacache` e `isend`
+para el detalle).
 
-- **Problema en metacache:** cuando un proceso propietario de una especie
-  tenia que enviarla a varios destinos, usaba `MPI_Send` bloqueante uno detras
-  de otro. Con mensajes grandes, MPI espera a que el receptor este listo antes
-  de devolver el control (rendezvous), asi que el propietario quedaba
-  esperando a cada destino en fila antes de pasar al siguiente.
+El cambio en esta rama esta en `calc_matches` (`calc_matches.cpp`), la funcion
+que compara un par de especies completo. Esta funcion solo se usa en la
+ejecucion con un unico proceso (`size == 1`); con mas de un proceso, el
+pipeline MPI ya usaba una logica equivalente de forma interna. Las
+optimizaciones que incorpora `calc_matches` en esta rama son:
 
-- **Cambio en isend:** los envios a todos los destinos de una misma tanda se
-  lanzan con `MPI_Isend` (no bloqueante), sin esperar entre ellos, y se hace
-  un unico `MPI_Waitall` al final para confirmar que todos terminaron. Asi el
-  progreso de los envios ocurre en paralelo en lugar de en fila.
+- **Posiciones don't-care precalculadas** (`dontcare_positions`): en el
+  patron original, todas las posiciones se recorren para calcular el score;
+  aqui se calculan una vez, al principio de cada patron, las posiciones
+  marcadas como don't-care, que son las unicas relevantes para el calculo de
+  matches.
 
-- Este cambio se aplica en los dos puntos donde metacache enviaba datos a
-  varios destinos: el envio de metadata de una especie remota y el envio de
-  sus spaced-words por patron.
+- **Comparacion restringida a esas posiciones** (`score_dontcare_positions`):
+  el score y los mismatches entre dos spaced-words se calculan recorriendo
+  solo esas posiciones precalculadas, en lugar de todo el patron.
 
-- El resto del programa (reparto de especies, calculo de matches, fases y
-  tiempos reportados) es identico a `metacache`.
+- **Longitud de bloques con la misma key precalculada** (`key_run_lengths`):
+  los spaced-words estan ordenados por `key`; esta tabla indica, para cada
+  posicion, cuantos elementos consecutivos comparten la misma key. Mantiene
+  el mismo comportamiento que la funcion `multiMatch` original, pero evita
+  recalcular esa busqueda repetidamente dentro de los bucles principales.
+
+- El resultado del calculo (tasa de mismatches y matriz de distancias) es el
+  mismo que en `isend`; el cambio reduce trabajo repetido dentro de
+  `calc_matches`, no altera la logica de comparacion.
 
 
 ## Compilacion
@@ -88,7 +98,7 @@ reciente ( [ver](https://github.com/DevAna-2025/ProtSpaM/blob/feat/mpi-phase4-me
 Ejemplo:
 
 ```bash
-mpirun -np 4 ./bin/Debug/protspam_block_pipeline_metacache_isend_calcbase \
+mpirun -np 4 ./bin/Debug/protspam_block_pipeline_metacache_isend_calcopt \
     -l filelist_20 \
     -p patterns_clean.txt \
     -o DMat_20sp_np4
@@ -108,12 +118,12 @@ Antes de ejecutar los batch scripts es necesario crear las carpetas donde se esc
 
 ### Un nodo (filelist_55)
 
-A diferencia de las demas variantes, `isend` no se ejecuto con el script
-generico `run_variant_55.sbatch`, sino con un script propio
-(`run_isend_55_64g.sbatch`) para ahorrar tiempo de cluster. Este script solo
-evalua np = 16, 32 y 64 (no 1, 2, 4, 8), ya que el objetivo de esta corrida
-era comparar directamente contra `metacache` en los puntos donde el
-desbalance de `filelist_55` es mas relevante.
+Al igual que `isend`, esta variante no se ejecuto con el script generico
+`run_variant_55.sbatch`, sino con un script propio
+(`run_isend_calcopt_55.sbatch`). Este script compara especificamente esta
+variante frente a `isend` (version base) para evaluar si la optimizacion de
+`calc_matches` aporta mejora adicional sobre el fix de comunicacion. Solo
+evalua np = 16 y 32 (no 1, 2, 4, 8, 64), con 3 repeticiones.
 
 Crear carpetas (las crea tambien el propio script si no existen):
 
@@ -124,7 +134,7 @@ mkdir -p logs_isend_55 results_isend_55
 Ejecutar:
 
 ```bash
-sbatch run_isend_55_64g.sbatch
+sbatch run_isend_calcopt_55.sbatch
 ```
 
 Configuracion usada:
@@ -133,17 +143,22 @@ Configuracion usada:
 Nodos: 1
 Memoria: 64 GB
 Filelist: filelist_55
-Procesos MPI evaluados: 16, 32, 64
+Procesos MPI evaluados: 16, 32
 Repeticiones: 3
 ```
 
 Salida principal:
 
 ```text
-logs_isend_55/resumen_isend_<job_id>.tsv
-logs_isend_55/isend_metacache_55sp_np*_rep*_<job_id>.log
-results_isend_55/DMat_isend_metacache_55sp_np*_rep*_<job_id>
+logs_isend_55/resumen_isend_calcopt_<job_id>.tsv
+logs_isend_55/isend_calcopt_55sp_np*_rep*_<job_id>.log
+results_isend_55/DMat_isend_calcopt_55sp_np*_rep*_<job_id>
 ```
+
+Nota: esta rama comparte las carpetas `logs_isend_55/` y `results_isend_55/`
+con la rama `isend` (ambos scripts escriben en las mismas carpetas); los
+ficheros se distinguen por el prefijo `isend_calcopt_` frente a
+`isend_metacache_`.
 
 ### Un nodo (filelist_64)
 
@@ -153,8 +168,11 @@ tambien la seccion "Multinodo" para la misma variante ejecutada en varios
 nodos).
 
 El script `run_benchmark_64.sbatch` evalua en una misma ejecucion las
-variantes `metacache`, `isend` e `isend_opt`, para optimizar el uso del
-cluster. 
+variantes `metacache`, `isend` e `isend_opt` (esta rama, misma optimizacion
+de `calc_matches` descrita arriba, identificada como `isend_opt` en dicho
+script), para optimizar el uso del cluster.El TSV resumen incluidos en esta rama corresponden unicamente a la variante
+`isend_opt` (ficheros con prefijo `isend_opt_`, columna `variante = isend_opt`
+en el TSV); las otras variantes se documentan en sus ramas correspondientes.
 
 Crear carpetas:
 
@@ -178,12 +196,12 @@ Procesos MPI evaluados: 1, 2, 4, 8, 16, 32, 64
 Repeticiones: 3
 ```
 
-Salida principal (filtrada a esta variante, prefijo `isend_`):
+Salida principal (filtrada a esta variante, prefijo `isend_opt_`):
 
 ```text
 logs_bench64/resumen_bench64_<job_id>.tsv
-logs_bench64/isend_64sp_np*_rep*_<job_id>.log
-results_bench64/DMat_isend_64sp_np*_rep*_<job_id>
+logs_bench64/isend_opt_64sp_np*_rep*_<job_id>.log
+results_bench64/DMat_isend_opt_64sp_np*_rep*_<job_id>
 ```
 
 ### Multinodo
@@ -194,8 +212,11 @@ una densidad fija de 32 procesos por nodo, variando el numero de nodos: 1, 2,
 procesos por nodo se controla con `mpirun --map-by ppr:32:node`.
 
 El script `run_benchmark_multinodo.sbatch` evalua en una misma ejecucion las
-variantes `metacache`, `isend` e `isend_opt`, para optimizar el uso del
-cluster. 
+variantes `metacache`, `isend` e `isend_opt` (esta rama, identificada como
+`isend_opt` en dicho script), para optimizar el uso del cluster.El TSV resumen incluidos en esta rama corresponden
+unicamente a la variante `isend_opt` (ficheros con prefijo `isend_opt_`,
+columna `variante = isend_opt` en el TSV); las otras variantes se documentan
+en sus ramas correspondientes.
 
 Crear carpetas:
 
@@ -220,12 +241,12 @@ Filelist: filelist_64
 Repeticiones: 3
 ```
 
-Salida principal (filtrada a esta variante, prefijo `isend_`):
+Salida principal (filtrada a esta variante, prefijo `isend_opt_`):
 
 ```text
 logs_multinodo/resumen_multinodo_<job_id>.tsv
-logs_multinodo/isend_64sp_*nodos_np*_rep*_<job_id>.log
-results_multinodo/DMat_isend_64sp_*nodos_np*_rep*_<job_id>
+logs_multinodo/isend_opt_64sp_*nodos_np*_rep*_<job_id>.log
+results_multinodo/DMat_isend_opt_64sp_*nodos_np*_rep*_<job_id>
 ```
 
 
@@ -245,7 +266,6 @@ results_multinodo/DMat_isend_64sp_*nodos_np*_rep*_<job_id>
 |-- filelist_55
 |-- filelist_64
 |-- patterns_clean.txt
-|-- run_isend_55_64g.sbatch
 |-- run_benchmark_64.sbatch
 |-- run_benchmark_multinodo.sbatch
 |-- README.md
