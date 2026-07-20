@@ -1,8 +1,8 @@
-# ProtSpaM-MPI - Fase 4 (variante: metacache)
+# ProtSpaM-MPI - Fase 4 (variante: isend)
 
 Extensión con MPI de **Prot-SpaM**, desarrollada como parte del TFM en Computación de Altas Prestaciones.
 
-Esta rama contiene la variante **metacache** de la Fase 4, base sobre la que se construyen el resto de optimizaciones.
+Esta rama contiene la variante **isend** de la Fase 4: parte de `metacache` y sustituye su comunicación bloqueante por un envío no bloqueante.
 
 
 ## Proyecto original
@@ -18,27 +18,29 @@ https://github.com/jschellh/ProtSpaM
 
 ## Características:
 
-Esta rama parte de **`feat/mpi-phase3-a`** (lectura centralizada: rank 0 lee
-todas las especies y las reparte) como base, y anade la paralelización de la
-Fase 4 (cálculo de matches y matriz de distancias):
+Esta rama parte de **`metacache`** (rama `feat/mpi-phase4-metacache`) como
+base, que a su vez parte de `feat/mpi-phase3-a` (lectura centralizada). De
+metacache se conserva todo: la metadata en cache por especie, el envio
+selectivo y el streaming de spaced-words por patron (ver el README de
+`metacache` para el detalle). El unico cambio es como se envian esos datos:
 
-- Cada especie tiene un proceso propietario; los demas procesos reciben sus
-  datos solo si los necesitan para algun par pendiente.
-  
-- La metadata de cada especie remota (cabecera, secuencia y posiciones de
-  inicio) se envia **una sola vez por especie**, antes del bucle de patrones,
-  y se guarda en una tabla en memoria (`remote_metadata_cache`) para no
-  reenviarla en cada uno de los 5 patrones.
-  
-- Antes de comunicar nada se calcula que procesos necesitan realmente cada
-  especie remota, y solo se envia a esos procesos.
-  
-- Los spaced-words (que si cambian en cada patron) se recalculan y comunican
-  patron a patron, descartando los del patron anterior para no acumular
-  memoria.
-  
-- La comunicacion de metadata y de spaced-words usa `MPI_Send`/`MPI_Recv`
-  bloqueante. 
+- **Problema en metacache:** cuando un proceso propietario de una especie
+  tenia que enviarla a varios destinos, usaba `MPI_Send` bloqueante uno detras
+  de otro. Con mensajes grandes, MPI espera a que el receptor este listo antes
+  de devolver el control (rendezvous), asi que el propietario quedaba
+  esperando a cada destino en fila antes de pasar al siguiente.
+
+- **Cambio en isend:** los envios a todos los destinos de una misma tanda se
+  lanzan con `MPI_Isend` (no bloqueante), sin esperar entre ellos, y se hace
+  un unico `MPI_Waitall` al final para confirmar que todos terminaron. Asi el
+  progreso de los envios ocurre en paralelo en lugar de en fila.
+
+- Este cambio se aplica en los dos puntos donde metacache enviaba datos a
+  varios destinos: el envio de metadata de una especie remota y el envio de
+  sus spaced-words por patron.
+
+- El resto del programa (reparto de especies, calculo de matches, fases y
+  tiempos reportados) es identico a `metacache`.
 
 
 ## Compilacion
@@ -51,7 +53,7 @@ make
 El ejecutable queda en:
 
 ```text
-./bin/Debug/protspam_block_pipeline_metacache_calcbase
+./bin/Debug/protspam
 ```
 
 ## Preparacion de datos
@@ -86,7 +88,7 @@ reciente ( [ver](https://github.com/DevAna-2025/ProtSpaM/blob/feat/mpi-phase4-me
 Ejemplo:
 
 ```bash
-mpirun -np 4 ./bin/Debug/protspam_block_pipeline_metacache_calcbase \
+mpirun -np 4 ./bin/Debug/protspam_block_pipeline_metacache_isend_calcbase \
     -l filelist_20 \
     -p patterns_clean.txt \
     -o DMat_20sp_np4
@@ -106,21 +108,23 @@ Antes de ejecutar los batch scripts es necesario crear las carpetas donde se esc
 
 ### Un nodo (filelist_55)
 
-El script `run_variant_55.sbatch` es generico: recibe el binario y la
-combinacion de variante como argumentos, de forma que una misma llamada
-`sbatch` ejecuta unicamente la variante indicada. Para esta rama
-(`metacache`) se uso:
+A diferencia de las demas variantes, `isend` no se ejecuto con el script
+generico `run_variant_55.sbatch`, sino con un script propio
+(`run_isend_55_64g.sbatch`) para ahorrar tiempo de cluster. Este script solo
+evalua np = 16, 32 y 64 (no 1, 2, 4, 8), ya que el objetivo de esta corrida
+era comparar directamente contra `metacache` en los puntos donde el
+desbalance de `filelist_55` es mas relevante.
 
 Crear carpetas (las crea tambien el propio script si no existen):
 
 ```bash
-mkdir -p logs_variants_55 results_variants_55
+mkdir -p logs_isend_55 results_isend_55
 ```
 
 Ejecutar:
 
 ```bash
-sbatch run_variant_55.sbatch protspam_block_pipeline_metacache_calcbase block pipeline calcbase
+sbatch run_isend_55_64g.sbatch
 ```
 
 Configuracion usada:
@@ -129,16 +133,16 @@ Configuracion usada:
 Nodos: 1
 Memoria: 64 GB
 Filelist: filelist_55
-Procesos MPI evaluados: 1, 2, 4, 8, 16, 32, 64
+Procesos MPI evaluados: 16, 32, 64
 Repeticiones: 3
 ```
 
-Salida principal (nombrada con el prefijo de esta variante):
+Salida principal:
 
 ```text
-logs_variants_55/resumen_block_pipeline_calcbase_<job_id>.tsv
-logs_variants_55/block_pipeline_calcbase_55sp_np*_rep*_<job_id>.log
-results_variants_55/DMat_block_pipeline_calcbase_55sp_np*_rep*_<job_id>
+logs_isend_55/resumen_isend_<job_id>.tsv
+logs_isend_55/isend_metacache_55sp_np*_rep*_<job_id>.log
+results_isend_55/DMat_isend_metacache_55sp_np*_rep*_<job_id>
 ```
 
 ### Un nodo (filelist_64)
@@ -150,7 +154,7 @@ nodos).
 
 El script `run_benchmark_64.sbatch` evalua en una misma ejecucion las
 variantes `metacache`, `isend` e `isend_opt`, para optimizar el uso del
-cluster.
+cluster. 
 
 Crear carpetas:
 
@@ -174,12 +178,12 @@ Procesos MPI evaluados: 1, 2, 4, 8, 16, 32, 64
 Repeticiones: 3
 ```
 
-Salida principal (filtrada a esta variante, prefijo `metacache_`):
+Salida principal (filtrada a esta variante, prefijo `isend_`):
 
 ```text
 logs_bench64/resumen_bench64_<job_id>.tsv
-logs_bench64/metacache_64sp_np*_rep*_<job_id>.log
-results_bench64/DMat_metacache_64sp_np*_rep*_<job_id>
+logs_bench64/isend_64sp_np*_rep*_<job_id>.log
+results_bench64/DMat_isend_64sp_np*_rep*_<job_id>
 ```
 
 ### Multinodo
@@ -216,12 +220,12 @@ Filelist: filelist_64
 Repeticiones: 3
 ```
 
-Salida principal (filtrada a esta variante, prefijo `metacache_`):
+Salida principal (filtrada a esta variante, prefijo `isend_`):
 
 ```text
 logs_multinodo/resumen_multinodo_<job_id>.tsv
-logs_multinodo/metacache_64sp_*nodos_np*_rep*_<job_id>.log
-results_multinodo/DMat_metacache_64sp_*nodos_np*_rep*_<job_id>
+logs_multinodo/isend_64sp_*nodos_np*_rep*_<job_id>.log
+results_multinodo/DMat_isend_64sp_*nodos_np*_rep*_<job_id>
 ```
 
 
@@ -241,7 +245,7 @@ results_multinodo/DMat_metacache_64sp_*nodos_np*_rep*_<job_id>
 |-- filelist_55
 |-- filelist_64
 |-- patterns_clean.txt
-|-- run_variant_55.sbatch
+|-- run_isend_55_64g.sbatch
 |-- run_benchmark_64.sbatch
 |-- run_benchmark_multinodo.sbatch
 |-- README.md
