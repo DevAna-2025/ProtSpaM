@@ -150,10 +150,7 @@ nodos).
 
 El script `run_benchmark_64.sbatch` evalua en una misma ejecucion las
 variantes `metacache`, `isend` e `isend_opt`, para optimizar el uso del
-cluster. El TSV resumen incluidos en esta rama
-corresponden unicamente a la variante `metacache` (ficheros con prefijo
-`metacache_`, columna `variante = metacache` en el TSV); las otras variantes
-se documentan en sus ramas correspondientes.
+cluster.
 
 Crear carpetas:
 
@@ -194,10 +191,7 @@ procesos por nodo se controla con `mpirun --map-by ppr:32:node`.
 
 El script `run_benchmark_multinodo.sbatch` evalua en una misma ejecucion las
 variantes `metacache`, `isend` e `isend_opt`, para optimizar el uso del
-cluster. El TSV resumen incluidos en esta rama
-corresponden unicamente a la variante `metacache` (ficheros con prefijo
-`metacache_`, columna `variante = metacache` en el TSV); las otras variantes
-se documentan en sus ramas correspondientes.
+cluster. 
 
 Crear carpetas:
 
