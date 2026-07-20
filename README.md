@@ -150,7 +150,7 @@ nodos).
 
 El script `run_benchmark_64.sbatch` evalua en una misma ejecucion las
 variantes `metacache`, `isend` e `isend_opt`, para optimizar el uso del
-cluster. Los logs, resultados y filas del TSV resumen incluidos en esta rama
+cluster. El TSV resumen incluidos en esta rama
 corresponden unicamente a la variante `metacache` (ficheros con prefijo
 `metacache_`, columna `variante = metacache` en el TSV); las otras variantes
 se documentan en sus ramas correspondientes.
@@ -194,7 +194,7 @@ procesos por nodo se controla con `mpirun --map-by ppr:32:node`.
 
 El script `run_benchmark_multinodo.sbatch` evalua en una misma ejecucion las
 variantes `metacache`, `isend` e `isend_opt`, para optimizar el uso del
-cluster. Los logs, resultados y filas del TSV resumen incluidos en esta rama
+cluster. El TSV resumen incluidos en esta rama
 corresponden unicamente a la variante `metacache` (ficheros con prefijo
 `metacache_`, columna `variante = metacache` en el TSV); las otras variantes
 se documentan en sus ramas correspondientes.
@@ -250,9 +250,6 @@ results_multinodo/DMat_metacache_64sp_*nodos_np*_rep*_<job_id>
 |-- run_variant_55.sbatch
 |-- run_benchmark_64.sbatch
 |-- run_benchmark_multinodo.sbatch
-|-- logs_variants_55/               (solo ficheros con prefijo metacache_)
-|-- logs_bench64/                   (solo ficheros con prefijo metacache_)
-|-- logs_multinodo/                 (solo ficheros con prefijo metacache_)
 |-- README.md
 |-- README_FILELIST.md
 |-- COPYING
