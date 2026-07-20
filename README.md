@@ -16,7 +16,7 @@ Repositorio original:
 
 https://github.com/jschellh/ProtSpaM
 
-## Cambios respecto a la Fase 3 (variante metacache)
+## Características:
 
 Esta rama parte de **`feat/mpi-phase3-a`** (lectura centralizada: rank 0 lee
 todas las especies y las reparte) como base, y anade la paralelización de la
@@ -38,17 +38,8 @@ Fase 4 (cálculo de matches y matriz de distancias):
   memoria.
   
 - La comunicacion de metadata y de spaced-words usa `MPI_Send`/`MPI_Recv`
-  bloqueante. Este ultimo punto es el que cambia en la variante `isend`.
+  bloqueante. 
 
-## Requisitos
-
-En FinisTerrae III se usaron los siguientes modulos:
-
-```bash
-module load cesga/2025
-module load gcc
-module load openmpi/5.0.9
-```
 
 ## Compilacion
 
@@ -65,7 +56,7 @@ El ejecutable queda en:
 
 ## Preparacion de datos
 
-Los proteomas no se incluyen en el repositorio. Antes de ejecutar, debe existir la carpeta `data/` y los archivos referenciados por cada filelist.
+Los conjuntos de datos FASTA no están incluidos en este repositorio, fueron utilizados los archivos referenciados en el repositorio original, veáse el enlace del conjunto de datos [aquí](http://projects.gobics.de/data/protspam/paperData.tgz) . Antes de ejecutar, debe existir la carpeta `data/` y los archivos referenciados por cada filelist.
 
 Ejemplo:
 
