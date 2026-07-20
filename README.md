@@ -79,7 +79,7 @@ filelist_64
 No se uso `filelist_40` en el informe de avance. `filelist_64` es un conjunto
 balanceado de 64 especies (sin la especie de mayor tamaño ni las de menor
 tamano del conjunto original), usado en el benchmark de escalabilidad mas
-reciente (ver `filelists/README.md` para el detalle de su construccion).
+reciente ( [ver](https://github.com/DevAna-2025/ProtSpaM/blob/feat/mpi-phase4-metacache/README_FILELIST.md))  para el detalle de su construccion).
 
 ## Ejecucion manual
 
@@ -196,7 +196,7 @@ results_multinodo/DMat_*
 .
 |-- include/
 |-- src/
-|-- data/                          (vacio en el repo; ver Preparacion de datos)
+|-- data/                        
 |-- main.cpp
 |-- Makefile
 |-- filelist_10
@@ -208,8 +208,9 @@ results_multinodo/DMat_*
 |-- patterns_clean.txt
 |-- run_phase4_single.sbatch
 |-- run_benchmark_multinodo.sbatch
-|-- logs_phase4_single_64g/         (logs y TSV resumen; sin DMat_*)
-|-- logs_multinodo/                 (logs y TSV resumen; sin DMat_*)
+|-- logs_phase4_single_64g/         
+|-- logs_multinodo/                 
 |-- README.md
+|-- README_FILELIST.md
 |-- COPYING
 ```
