@@ -1,7 +1,0 @@
-variant	calc	job_id	np	rep	status	exit_code	t_phase3_s	t_phase4_s	t_total_program_s	elapsed_seconds	log_file	output_file
-block_pipeline_metacache_isend	calcopt	8537267	16	1	OK	0	54.4287	429.976	501.851	507	logs_isend_55/isend_calcopt_55sp_np16_rep1_8537267.log	results_isend_55/DMat_isend_calcopt_55sp_np16_rep1_8537267
-block_pipeline_metacache_isend	calcopt	8537267	16	2	OK	0	54.587	430.189	501.279	505	logs_isend_55/isend_calcopt_55sp_np16_rep2_8537267.log	results_isend_55/DMat_isend_calcopt_55sp_np16_rep2_8537267
-block_pipeline_metacache_isend	calcopt	8537267	16	3	OK	0	54.5689	429.799	500.803	504	logs_isend_55/isend_calcopt_55sp_np16_rep3_8537267.log	results_isend_55/DMat_isend_calcopt_55sp_np16_rep3_8537267
-block_pipeline_metacache_isend	calcopt	8537267	32	1	OK	0	25.241	373.617	414.939	420	logs_isend_55/isend_calcopt_55sp_np32_rep1_8537267.log	results_isend_55/DMat_isend_calcopt_55sp_np32_rep1_8537267
-block_pipeline_metacache_isend	calcopt	8537267	32	2	OK	0	25.2519	373.782	415.12	420	logs_isend_55/isend_calcopt_55sp_np32_rep2_8537267.log	results_isend_55/DMat_isend_calcopt_55sp_np32_rep2_8537267
-block_pipeline_metacache_isend	calcopt	8537267	32	3	OK	0	25.2671	373.932	415.289	420	logs_isend_55/isend_calcopt_55sp_np32_rep3_8537267.log	results_isend_55/DMat_isend_calcopt_55sp_np32_rep3_8537267
