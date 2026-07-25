@@ -1,20 +1,23 @@
-# ProtSpaM-MPI — Fase 3 (Opción A: lectura centralizada)
+# ProtSpaM-MPI — Fase 3 (Opción B: lectura distribuida)
 
 Extensión con MPI de **Prot-SpaM**, desarrollada como parte de un Trabajo de
 Fin de Máster en Computación de Altas Prestaciones.
 
 Esta rama paraleliza mediante MPI la **Fase 3** (generación de las palabras
-espaciadas). En esta variante, el proceso 0 lee todas las secuencias del disco
-y reparte a cada proceso su bloque de especies mediante comunicación punto a
-punto. Las fases restantes conservan el comportamiento secuencial original.
+espaciadas). En esta variante no existe un proceso que centralice la lectura:
+todos los procesos conocen la lista completa de ficheros, pero cada uno calcula
+su propio rango local y lee directamente del disco solo los ficheros que le
+corresponden, sin comunicación inicial. Las fases restantes conservan el
+comportamiento secuencial original.
 
 ## Cambios respecto a Prot-SpaM original
 
 - Reparto estático de las especies por bloques entre los procesos MPI.
 - Cálculo de las palabras espaciadas distribuido: cada proceso opera sobre sus
   especies locales, sin comunicación durante el cómputo.
-- **Lectura centralizada**: solo el proceso 0 accede al disco y distribuye las
-  secuencias al resto (`send_species` / `recv_species`).
+- **Lectura distribuida**: cada proceso lee del disco únicamente su bloque de
+  ficheros (`sw_parser` sobre los ficheros locales), eliminando la fase de
+  comunicación inicial de las secuencias.
 - Carga de patrones desde fichero fijo para garantizar la reproducibilidad
   (se prescinde de la generación probabilística por defecto).
 
@@ -73,6 +76,7 @@ data/species1.faa
 data/species2.faa
 data/species3.faa
 ```
+
 Se emplearon los ficheros referenciados en el repositorio original de
 Prot-SpaM, disponibles en
 http://projects.gobics.de/data/protspam/paperData.tgz
