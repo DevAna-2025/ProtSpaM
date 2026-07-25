@@ -1,34 +1,30 @@
-# ProtSpaM-MPI - Fase 3
+# ProtSpaM-MPI — Fase 3 (Opción A: lectura centralizada)
 
-Extensión con MPI de **Prot-SpaM**, desarrollada como parte de un Trabajo de Fin de Máster en Computación de Altas Prestaciones.
+Extensión con MPI de **Prot-SpaM**, desarrollada como parte de un Trabajo de
+Fin de Máster en Computación de Altas Prestaciones.
 
-Esta rama contiene la implementación de la **Fase 3 - Opción B**. Paraleliza la etapa de generación de palabras espaciadas utilizando MPI con lectura distribuida de la entrada para ejecuciones mediante `-l` (*filelist*). Las etapas restantes conservan el comportamiento secuencial original y continúan en desarrollo.
+Esta rama paraleliza mediante MPI la **Fase 3** (generación de las palabras
+espaciadas). En esta variante, el proceso 0 lee todas las secuencias del disco
+y reparte a cada proceso su bloque de especies mediante comunicación punto a
+punto. Las fases restantes conservan el comportamiento secuencial original.
 
----
+## Cambios respecto a Prot-SpaM original
 
-## Proyecto Original
+- Reparto estático de las especies por bloques entre los procesos MPI.
+- Cálculo de las palabras espaciadas distribuido: cada proceso opera sobre sus
+  especies locales, sin comunicación durante el cómputo.
+- **Lectura centralizada**: solo el proceso 0 accede al disco y distribuye las
+  secuencias al resto (`send_species` / `recv_species`).
+- Carga de patrones desde fichero fijo para garantizar la reproducibilidad
+  (se prescinde de la generación probabilística por defecto).
 
-Este trabajo está basado en:
+## Proyecto original
 
-> Leimeister, C. A., Schellhorn, J., Schoebel, S., Gerth, M., Bleidorn, C., & Morgenstern, B. (2018).
-> *Prot-SpaM: Fast alignment-free phylogeny reconstruction based on whole-proteome sequences.*
-> bioRxiv, 306142.
+> Leimeister, C. A., Schellhorn, J., Dörrer, S., Gerth, M., Bleidorn, C.,
+> & Morgenstern, B. (2019). *Prot-SpaM: fast alignment-free phylogeny
+> reconstruction based on whole-proteome sequences.* GigaScience, 8(3), giy148.
 
-Repositorio original:
-
-https://github.com/jschellh/ProtSpaM
-
----
-
-## Características
-
-* Paralelización de la Fase 3 (generación de palabras espaciadas) mediante MPI.
-* Estrategia de entrada Opción B: cada proceso MPI lee únicamente el subconjunto de archivos FASTA asignado a su rango (*rank*).
-* Computación distribuida entre múltiples procesos MPI.
-* Experimentos reproducibles utilizando archivos de patrones fijos.
-* Compatible con el formato de entrada y los conjuntos de datos originales de Prot-SpaM.
-
----
+Repositorio original: https://github.com/jschellh/ProtSpaM
 
 ## Compilación
 
@@ -36,120 +32,49 @@ https://github.com/jschellh/ProtSpaM
 make
 ```
 
-Ejecutable:
+Genera el ejecutable en `./bin/Debug/protspam`.
+
+## Ejecución
 
 ```bash
-./bin/Debug/protspam
+mpirun -np <procesos> ./bin/Debug/protspam -l <filelist> -p <patrones> -o <salida>
 ```
-
----
-
-## Preparación de los datos
-
-Antes de ejecutar el programa, crea un directorio `data/` y coloca los archivos FASTA según las rutas especificadas en el `filelist` correspondiente.
-
-
-Antes de ejecutar el programa, crea un directorio `data/` y coloca los archivos FASTA según las rutas especificadas en el `filelist` correspondiente.
-
-Los conjuntos de datos FASTA no están incluidos en este repositorio, fueron utilizados los archivos referenciados en el repositorio original, veáse el enlace del conjunto de datos [aquí](http://projects.gobics.de/data/protspam/paperData.tgz) . 
-Los archivos listados en `filelist_10`, `filelist_20` y `filelist_30` deben existir antes de ejecutar los experimentos.
-
 
 Ejemplo:
 
 ```bash
-mkdir data
-cp /ruta/a/proteomas/*.faa data/
+mpirun -np 32 ./bin/Debug/protspam -l filelist -p patterns_clean.txt -o DMat
 ```
 
-Si `filelist_10` contiene:
+Donde:
+
+- `<filelist>`: fichero de texto con la ruta a cada FASTA, una por línea.
+- `<patrones>`: fichero de patrones fijos.
+- `<salida>`: fichero de la matriz de distancias resultante (formato PHYLIP).
+
+## Parámetros
+
+Los patrones se cargan desde `patterns_clean.txt`, con la configuración por
+defecto de Prot-SpaM:
+
+- Peso del patrón: 6
+- Posiciones *don't-care*: 40
+- Umbral: 0
+- Número de patrones: 5
+
+## Datos de entrada
+
+Los ficheros FASTA no se incluyen en el repositorio. Cada especie es un fichero
+FASTA con su proteoma completo, y el `filelist` contiene la ruta a cada uno,
+una por línea:
 
 ```text
 data/species1.faa
 data/species2.faa
 data/species3.faa
 ```
+Se emplearon los ficheros referenciados en el repositorio original de
+Prot-SpaM, disponibles en
+http://projects.gobics.de/data/protspam/paperData.tgz
 
-entonces los archivos deben existir en esas ubicaciones.
-
----
-
-## Ejecución
-
-```bash
-mpirun -np <procesos> ./bin/Debug/protspam [opciones] -l <filelist> -p <patrones>
-```
-
-Al utilizar `-l <filelist>`, el archivo *filelist* se divide en bloques contiguos. Cada *rank* lee su bloque local, calcula las palabras espaciadas correspondientes a sus especies asignadas y envía los resultados al *rank* 0. La Fase 4 continúa ejecutándose de forma secuencial en el *rank* 0.
-
-Ejemplo:
-
-```bash
-mpirun -np 32 ./bin/Debug/protspam \
-    -l filelist_30 \
-    -p patterns_clean.txt \
-    -o DMat_30sp
-```
-
----
-
-## Script de Benchmark
-
-Los experimentos de la **Fase 3 - Opción B** pueden ejecutarse mediante el script de SLURM:
-
-```bash
-mkdir -p logs results
-sbatch run_opcionB.sbatch
-```
-
-El script ejecuta 5 repeticiones para 10, 20 y 30 especies utilizando 1, 2, 4, 8, 16 y 32 procesos MPI. Los registros individuales de ejecución se almacenan en `logs/`, las matrices de distancia en `results/` y se genera un archivo resumen en formato TSV con el estado, el código de salida y el tiempo de ejecución de cada experimento.
-
-Los experimentos están diseñados para ejecutarse dentro de un único nodo. El script solicita 32 tareas MPI y utiliza hasta 32 procesos por ejecución.
-
----
-
-## Filelists
-
-Los experimentos de este repositorio utilizan:
-
-* `filelist_10`
-* `filelist_20`
-* `filelist_30`
-
----
-
-## Patrones
-
-Los experimentos utilizan el archivo de patrones fijo:
-
-```text
-patterns_clean.txt
-```
-
-con los parámetros por defecto de Prot-SpaM:
-
-* Peso: 6
-* Posiciones *don't-care*: 40
-* Umbral: 0
-* Número de patrones: 5
-
----
-
-## Estructura del repositorio
-
-```text
-.
-|-- data/
-|-- filelist_10
-|-- filelist_20
-|-- filelist_30
-|-- patterns_clean.txt
-|-- main.cpp
-|-- run_opcionB.sbatch
-|-- logs/
-|-- results/
-|-- src/
-|-- include/
-|-- Makefile
-|-- README.md
-```
+Todas las rutas listadas deben existir antes de ejecutar el programa.
