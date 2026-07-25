@@ -1,52 +1,77 @@
-# ProtSpaM (Versión Secuencial en C++)
+# Prot-SpaM
 
-Esta es una adaptación **secuencial** de [ProtSpaM](https://github.com/jschellh/ProtSpaM), una herramienta para estimar distancias filogenéticas entre proteínas basada en **spaced-word matches**.  
+### Note
+Currently this program only supports Linux.
 
-La versión original incluye paralelismo con **OpenMP**.  
-Esta versión elimina toda la paralelización para ejecutarse de manera **estrictamente secuencial**, manteniendo la misma funcionalidad principal.  
+### Compilation
+cd into the root directory (containing the 'Makefile') and type:
 
----
+```	make ```
 
-## ✨ Cambios respecto a la versión original
-- Se creó un archivo `main_sequential.cpp` en lugar del `main.cpp` original.  
-- Se eliminaron las dependencias de **OpenMP** (`#include <omp.h>`, `omp_get_wtime`, `omp_set_num_threads`, `#pragma omp parallel for`).  
-- El sistema de medición de tiempo ahora utiliza `std::chrono` en lugar de funciones de OpenMP.  
-- El parámetro `-t` (número de hilos) se borra ya que no es necesari para un codigo secuencial.  
+### Run
 
----
+```	./protspam [options] -l <filelist> ```
 
-## 🔧 Compilación
-- Primero necesitas tener la carpeta /data con todo los archivos FASTA
-- Revisa que lo que esta dentro del archivo filelist y que esos archivos existan en /data
-- Corre lo que esta en el archivo Makefile
+### Filelist
 
-```bash
-make
+The program takes a plain text file containing the relative paths to each input
+dataset. To create your 'filelist' simply type:
+
+``` ls -1 path/to/input/* > filelist ```
+
+This will list each file in specified directory, one file per line.
+
+### Options
+```
+	-h/-?: print this help and exit
+	-w <integer>: pattern weight (default 6)
+	-d <integer>: number of don't-care positions (default 40)
+	-s <integer>: the minimum score of a spaced-word match to be considered homologous (default: 0)
+	-m <integer>: number of patterns used (default 5)
+	-t <integer>: number of threads (default: omp_get_max_threads() )
+	-o <filename>: filename for distance matrix (default: DMat)
+	-l <filename>: specify a list of files to read as input
+	-z : if option is set, the pattern set used will be stored in patterns.txt"
+	-p <filename>: filename of pattern set to load and reuse"
 ```
 
-### 📂 Uso
-El programa acepta los mismos parámetros que la versión original.  
+### Sequence format:
 
-Ejemplo de uso con múltiples archivos de entrada:
+Sequence must be in FASTA format. All protein sequences of one proteome must be contained in one FASTA file.
 
-```bash
-./bin/Debug/protspam -w 6 -d 40 -m 5 -l filelist -p patterns.txt
+Example:
+```
+>Protein1
+RAKSDLKEASDKE..
+>Protein2
+ATSDLAGTASDKE..
+>Protein3
+ARNCQEFGSDSDW..
+..
 ```
 
-### ⚙️ Opciones principales
-- `-w <int>` : Peso del patrón (**default:** 6)  
-- `-d <int>` : Número de posiciones "don't-care" (**default:** 40)  
-- `-s <int>` : Puntaje mínimo para considerar un spaced-word match como homólogo (**default:** 0)  
-- `-m <int>` : Número de patrones (**default:** 5)  
-- `-o <file>` : Nombre del archivo de salida con la matriz de distancias (**default:** DMat)  
-- `-l <file>` : Lista de archivos de entrada en formato multifasta  
-- `-p <file>` : Cargar conjunto de patrones predefinidos  
-- `-z` : Guardar patrones generados en `patterns.txt`  
-- `-r` : Generar puntajes individuales para cada par de secuencias (spamogramas)  
+### Citation:
+```
+Scientific publications using filtered spaced word matches should cite:
 
----
+Leimeister, C. A., Schellhorn, J., Schoebel, S., Gerth, M., Bleidorn, C., & Morgenstern, B. (2018).
+Prot-SpaM: Fast alignment-free phylogeny reconstruction based on whole-proteome sequences.
+bioRxiv, 306142.
+```
 
-### 📊 Salida
-El programa genera los siguientes resultados:  
-- **Matriz de distancias** → archivo de salida (`DMat` por defecto).  
-- **Spamogramas (scores)** → en el directorio `scores/` si se usa la opción `-r`.  
+### Paper Abstract:
+```
+Word-based or "alignment-free" sequence comparison has become an active area of research in bioinformatics.
+Recently, fast word-based algorithms have been proposed that are able to accurately estimate phylogenetic
+distances between genomic DNA sequences without the need to calculate full sequence alignments. One of these
+approaches is Filtered Spaced Word Matches. Herein, we extend this approach to estimate evolutionary distances
+between species based on their complete or incomplete proteomes; our implementation is called Prot-SpaM.
+We show that Prot-SpaM can accurately estimate phylogenetic distances, and that our program can be used to
+calculate phylogenetic trees from whole proteomes in a matter of seconds.
+For various groups of taxa, we show that trees calculated with Prot-SpaM are of high quality.
+The source code of our software is available through Github: https://github.com/jschellh/ProtSpaM
+```
+
+### Datasets:
+
+You can download the datasets referenced in the paper [here](http://projects.gobics.de/data/protspam/paperData.tgz).
