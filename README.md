@@ -1,250 +1,90 @@
-# ProtSpaM-MPI - Fase 4 (variante: metacache)
+# ProtSpaM-MPI — Fase 4 (variante metacache: comunicación bloqueante)
 
-Extensión con MPI de **Prot-SpaM**, desarrollada como parte del TFM en Computación de Altas Prestaciones.
+Extensión con MPI de **Prot-SpaM**, desarrollada como parte de un Trabajo de
+Fin de Máster en Computación de Altas Prestaciones.
 
-Esta rama contiene la variante **metacache** de la Fase 4, base sobre la que se construyen el resto de optimizaciones.
+Esta rama paraleliza mediante MPI la **Fase 4** (cálculo de las coincidencias y
+de la matriz de distancias), sobre la Fase 3 ya paralelizada. En esta variante,
+cuando un proceso es propietario de una especie que otros necesitan, la envía
+uno a uno mediante comunicación punto a punto **bloqueante**
+(`MPI_Send` / `MPI_Recv`). Es la primera versión paralela de la Fase 4 y la
+base sobre la que se desarrolla la variante *isend*.
 
+## Cambios respecto a Prot-SpaM original
+
+- Reparto estático de las especies por bloques entre los procesos MPI.
+- Cálculo de la matriz de distancias distribuido: cada proceso calcula los
+  pares en los que interviene alguna de sus especies locales, comunicando las
+  palabras espaciadas de las especies remotas que necesita.
+- **Matriz de necesidad remota** (`MPI_Allgather`): el propietario de una
+  especie solo la envía a los procesos que realmente la van a usar.
+- **Caché de metadatos remotos**: el encabezado, la secuencia y los metadatos
+  de cada especie remota se comunican una sola vez, antes del bucle de patrones.
+- **Streaming patrón a patrón**: las palabras espaciadas se calculan y comunican
+  patrón a patrón, reduciendo el pico de memoria en un factor igual al número de
+  patrones.
+- **Comunicación bloqueante** (`MPI_Send` / `MPI_Recv`): cada envío a un destino
+  espera a que ese destino esté listo antes de continuar.
+- Carga de patrones desde fichero fijo para garantizar la reproducibilidad.
 
 ## Proyecto original
 
-Este trabajo se basa en:
+> Leimeister, C. A., Schellhorn, J., Dörrer, S., Gerth, M., Bleidorn, C.,
+> & Morgenstern, B. (2019). *Prot-SpaM: fast alignment-free phylogeny
+> reconstruction based on whole-proteome sequences.* GigaScience, 8(3), giy148.
 
-> Leimeister, C. A., Schellhorn, J., Schoebel, M., Gerth, M., Bleidorn, C., & Morgenstern, B. (2018).  
-> Prot-SpaM: Fast alignment-free phylogeny reconstruction based on whole-proteome sequences.
+Repositorio original: https://github.com/jschellh/ProtSpaM
 
-Repositorio original:
-
-https://github.com/jschellh/ProtSpaM
-
-## Características:
-
-Esta rama parte de **`feat/mpi-phase3-a`** (lectura centralizada: rank 0 lee
-todas las especies y las reparte) como base, y anade la paralelización de la
-Fase 4 (cálculo de matches y matriz de distancias):
-
-- Cada especie tiene un proceso propietario; los demas procesos reciben sus
-  datos solo si los necesitan para algun par pendiente.
-  
-- La metadata de cada especie remota (cabecera, secuencia y posiciones de
-  inicio) se envia **una sola vez por especie**, antes del bucle de patrones,
-  y se guarda en una tabla en memoria (`remote_metadata_cache`) para no
-  reenviarla en cada uno de los 5 patrones.
-  
-- Antes de comunicar nada se calcula que procesos necesitan realmente cada
-  especie remota, y solo se envia a esos procesos.
-  
-- Los spaced-words (que si cambian en cada patron) se recalculan y comunican
-  patron a patron, descartando los del patron anterior para no acumular
-  memoria.
-  
-- La comunicacion de metadata y de spaced-words usa `MPI_Send`/`MPI_Recv`
-  bloqueante. 
-
-
-## Compilacion
+## Compilación
 
 ```bash
-make clean
 make
 ```
 
-El ejecutable queda en:
+Genera el ejecutable en `./bin/Debug/protspam`.
 
-```text
-./bin/Debug/protspam_block_pipeline_metacache_calcbase
+## Ejecución
+
+```bash
+mpirun -np <procesos> ./bin/Debug/protspam -l <filelist> -p <patrones> -o <salida>
 ```
-
-## Preparacion de datos
-
-Los conjuntos de datos FASTA no están incluidos en este repositorio, fueron utilizados los archivos referenciados en el repositorio original, veáse el enlace del conjunto de datos [aquí](http://projects.gobics.de/data/protspam/paperData.tgz) . Antes de ejecutar, debe existir la carpeta `data/` y los archivos referenciados por cada filelist.
 
 Ejemplo:
 
 ```bash
-mkdir -p data
-cp /ruta/a/proteomas/*.faa data/
+mpirun -np 32 ./bin/Debug/protspam -l filelist -p patterns_clean.txt -o DMat
 ```
 
-Los experimentos de fase 4 se prepararon con estos filelists:
+Donde:
+
+- `<filelist>`: fichero de texto con la ruta a cada FASTA, una por línea.
+- `<patrones>`: fichero de patrones fijos.
+- `<salida>`: fichero de la matriz de distancias resultante (formato PHYLIP).
+
+## Parámetros
+
+Los patrones se cargan desde `patterns_clean.txt`, con la configuración por
+defecto de Prot-SpaM:
+
+- Peso del patrón: 6
+- Posiciones *don't-care*: 40
+- Umbral: 0
+- Número de patrones: 5
+
+## Datos de entrada
+
+Los ficheros FASTA no se incluyen en el repositorio. Cada especie es un fichero
+FASTA con su proteoma completo, y el `filelist` contiene la ruta a cada uno,
+una por línea:
 
 ```text
-filelist_10
-filelist_20
-filelist_30
-filelist_50
-filelist_55
-filelist_64
+data/species1.faa
+data/species2.faa
+data/species3.faa
 ```
 
-No se uso `filelist_40` en el informe de avance. `filelist_64` es un conjunto
-balanceado de 64 especies (sin la especie de mayor tamaño ni las de menor
-tamano del conjunto original), usado en el benchmark de escalabilidad mas
-reciente ( [ver](https://github.com/DevAna-2025/ProtSpaM/blob/feat/mpi-phase4-metacache/README_FILELIST.md))  para el detalle de su construccion).
+Se emplearon los ficheros referenciados en el repositorio original de
+Prot-SpaM, disponibles en
+http://projects.gobics.de/data/protspam/paperData.tgz
 
-## Ejecucion manual
-
-Ejemplo:
-
-```bash
-mpirun -np 4 ./bin/Debug/protspam_block_pipeline_metacache_calcbase \
-    -l filelist_20 \
-    -p patterns_clean.txt \
-    -o DMat_20sp_np4
-```
-
-La salida del programa incluye:
-
-```text
-Tiempo spaced-words
-Tiempo matches
-Tiempo total
-```
-
-## Benchmarks
-
-Antes de ejecutar los batch scripts es necesario crear las carpetas donde se escribiran logs y matrices de salida. Si las carpetas no existen, SLURM puede fallar al abrir los archivos indicados en `#SBATCH --output` y `#SBATCH --error`.
-
-### Un nodo (filelist_55)
-
-El script `run_variant_55.sbatch` es generico: recibe el binario y la
-combinacion de variante como argumentos, de forma que una misma llamada
-`sbatch` ejecuta unicamente la variante indicada. Para esta rama
-(`metacache`) se uso:
-
-Crear carpetas (las crea tambien el propio script si no existen):
-
-```bash
-mkdir -p logs_variants_55 results_variants_55
-```
-
-Ejecutar:
-
-```bash
-sbatch run_variant_55.sbatch protspam_block_pipeline_metacache_calcbase block pipeline calcbase
-```
-
-Configuracion usada:
-
-```text
-Nodos: 1
-Memoria: 64 GB
-Filelist: filelist_55
-Procesos MPI evaluados: 1, 2, 4, 8, 16, 32, 64
-Repeticiones: 3
-```
-
-Salida principal (nombrada con el prefijo de esta variante):
-
-```text
-logs_variants_55/resumen_block_pipeline_calcbase_<job_id>.tsv
-logs_variants_55/block_pipeline_calcbase_55sp_np*_rep*_<job_id>.log
-results_variants_55/DMat_block_pipeline_calcbase_55sp_np*_rep*_<job_id>
-```
-
-### Un nodo (filelist_64)
-
-Esta variante se ejecuto ademas, con `filelist_64` (conjunto balanceado, 64
-especies), evaluando np = 1, 2, 4, 8, 16, 32 y 64 en un unico nodo (ver
-tambien la seccion "Multinodo" para la misma variante ejecutada en varios
-nodos).
-
-El script `run_benchmark_64.sbatch` evalua en una misma ejecucion las
-variantes `metacache`, `isend` e `isend_opt`, para optimizar el uso del
-cluster.
-
-Crear carpetas:
-
-```bash
-mkdir -p logs_bench64 results_bench64
-```
-
-Ejecutar:
-
-```bash
-sbatch run_benchmark_64.sbatch
-```
-
-Configuracion usada:
-
-```text
-Nodos: 1
-Memoria: 64 GB
-Filelist: filelist_64
-Procesos MPI evaluados: 1, 2, 4, 8, 16, 32, 64
-Repeticiones: 3
-```
-
-Salida principal (filtrada a esta variante, prefijo `metacache_`):
-
-```text
-logs_bench64/resumen_bench64_<job_id>.tsv
-logs_bench64/metacache_64sp_np*_rep*_<job_id>.log
-results_bench64/DMat_metacache_64sp_np*_rep*_<job_id>
-```
-
-### Multinodo
-
-El benchmark multinodo del conjunto balanceado (`filelist_64`) se ejecuto con
-una densidad fija de 32 procesos por nodo, variando el numero de nodos: 1, 2,
-4 y 8 nodos (equivalentes a 32, 64, 128 y 256 procesos totales). El reparto de
-procesos por nodo se controla con `mpirun --map-by ppr:32:node`.
-
-El script `run_benchmark_multinodo.sbatch` evalua en una misma ejecucion las
-variantes `metacache`, `isend` e `isend_opt`, para optimizar el uso del
-cluster. 
-
-Crear carpetas:
-
-```bash
-mkdir -p logs_multinodo results_multinodo
-```
-
-Ejecutar:
-
-```bash
-sbatch run_benchmark_multinodo.sbatch
-```
-
-Configuracion usada:
-
-```text
-Nodos evaluados: 1, 2, 4, 8
-Procesos por nodo (PPN): 32
-Procesos totales evaluados: 32, 64, 128, 256
-Memoria: 64 GB por nodo
-Filelist: filelist_64
-Repeticiones: 3
-```
-
-Salida principal (filtrada a esta variante, prefijo `metacache_`):
-
-```text
-logs_multinodo/resumen_multinodo_<job_id>.tsv
-logs_multinodo/metacache_64sp_*nodos_np*_rep*_<job_id>.log
-results_multinodo/DMat_metacache_64sp_*nodos_np*_rep*_<job_id>
-```
-
-
-## Estructura principal
-
-```text
-.
-|-- include/
-|-- src/
-|-- data/                        
-|-- main.cpp
-|-- Makefile
-|-- filelist_10
-|-- filelist_20
-|-- filelist_30
-|-- filelist_50
-|-- filelist_55
-|-- filelist_64
-|-- patterns_clean.txt
-|-- run_variant_55.sbatch
-|-- run_benchmark_64.sbatch
-|-- run_benchmark_multinodo.sbatch
-|-- README.md
-|-- README_FILELIST.md
-|-- COPYING
-```
+Todas las rutas listadas deben existir antes de ejecutar el programa.
