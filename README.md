@@ -14,7 +14,7 @@ el que se verifica que las versiones paralelas producen el mismo resultado.
 
 ## Cambios respecto a la versión original
 
-- Se creó un archivo `main_sequential.cpp` en lugar del `main.cpp` original.
+- Se creó un archivo `main.cpp`  que es la versión secuencial del original
 - Se eliminaron las dependencias de **OpenMP** (`#include <omp.h>`,
   `omp_get_wtime`, `omp_set_num_threads`, `#pragma omp parallel for`).
 - El sistema de medición de tiempo ahora utiliza `std::chrono` en lugar de
