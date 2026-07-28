@@ -2,7 +2,7 @@ MPICXX ?= $(firstword $(shell command -v mpicxx 2>/dev/null || command -v mpic++
 ifeq ($(strip $(MPICXX)),)
 $(error No MPI C++ compiler wrapper found. Load an MPI module, for example: module load openmpi or module load mpich)
 endif
-CC = $(MPICXX) -fopenmp
+CC = $(MPICXX) 
 IDIR = ./include
 CFLAGS = -c -Wall -std=c++11 -I $(IDIR) -O3
 OBJDIR = ./obj/
