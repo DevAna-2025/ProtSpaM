@@ -51,3 +51,56 @@ Repositorio original: https://github.com/jschellh/ProtSpaM
 
 ```bash
 make
+```
+
+Genera el ejecutable en `./bin/Debug/protspam`.
+
+El proyecto se compila mediante un wrapper MPI con las opciones `-O3`,
+`-std=c++11` y `-Wall`. La versión final no utiliza OpenMP ni `-fopenmp`.
+
+## Ejecución
+
+```bash
+mpirun -np <procesos> ./bin/Debug/protspam -l <filelist> -p <patrones> -o <salida>
+```
+
+Ejemplo:
+
+```bash
+mpirun -np 32 ./bin/Debug/protspam -l filelist -p patterns_clean.txt -o DMat
+```
+
+Donde:
+
+- `<filelist>`: fichero de texto con la ruta a cada FASTA, una por línea.
+- `<patrones>`: fichero de patrones fijos.
+- `<salida>`: fichero de la matriz de distancias resultante, en formato PHYLIP.
+
+## Parámetros
+
+Los patrones se cargan desde `patterns_clean.txt`, con la configuración por
+defecto de Prot-SpaM:
+
+- Peso del patrón: 6.
+- Posiciones *don't-care*: 40.
+- Umbral: 0.
+- Número de patrones: 5.
+
+## Datos de entrada
+
+Los ficheros FASTA no se incluyen en el repositorio. Cada especie es un fichero
+FASTA con su proteoma completo, y el `filelist` contiene la ruta a cada uno,
+una por línea:
+
+```text
+data/species1.faa
+data/species2.faa
+data/species3.faa
+```
+
+Se emplearon los ficheros referenciados en el repositorio original de
+Prot-SpaM, disponibles en:
+
+http://projects.gobics.de/data/protspam/paperData.tgz
+
+Todas las rutas listadas deben existir antes de ejecutar el programa.
