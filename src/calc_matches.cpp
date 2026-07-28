@@ -41,6 +41,75 @@ int multiMatch(const vector<Word> &sortedWords, int start) {
     return multiMatch_length;
 }
 
+// Posiciones don't-care del patron actual. Las calculo una vez por patron para
+// no recorrer la mascara completa en cada comparacion de spaced-words.
+static vector<int> dontcare_positions(const vector<char> &pattern)
+{
+    vector<int> positions;
+    positions.reserve(pattern.size());
+
+    for (int i = 0; i < static_cast<int>(pattern.size()); ++i)
+    {
+        if (pattern[i] == '0')
+        {
+            positions.push_back(i);
+        }
+    }
+
+    return positions;
+}
+
+// Calcula score y mismatches usando solo las posiciones don't-care ya filtradas.
+static void score_dontcare_positions(const vector<char> &sequence1,
+                                     const vector<char> &sequence2,
+                                     unsigned int pos1,
+                                     unsigned int pos2,
+                                     const vector<int> &positions,
+                                     int &score,
+                                     int &mismatches)
+{
+    score = 0;
+    mismatches = 0;
+
+    for (int pat : positions)
+    {
+        int aa1 = static_cast<int>(sequence1[pos1 + pat]);
+        int aa2 = static_cast<int>(sequence2[pos2 + pat]);
+        score += blosum62[aa1][aa2];
+
+        if (aa1 != aa2)
+        {
+            ++mismatches;
+        }
+    }
+}
+
+// Precalculo de bloques con la misma key. Mantiene la misma idea de multiMatch,
+// pero evita repetir esa busqueda dentro de los bucles principales.
+static vector<int> key_run_lengths(const vector<Word> &words)
+{
+    vector<int> lengths(words.size(), 1);
+    size_t i = 0;
+
+    while (i < words.size())
+    {
+        size_t j = i + 1;
+        while (j < words.size() && words[j].key == words[i].key)
+        {
+            ++j;
+        }
+
+        for (size_t k = i; k < j; ++k)
+        {
+            lengths[k] = static_cast<int>(j - k);
+        }
+
+        i = j;
+    }
+
+    return lengths;
+}
+
 void scoreOutput(map<int,int> &scores, string header1, string header2) {
     header1.erase(header1.find_last_not_of(" \n\r\t") + 1);
     header2.erase(header2.find_last_not_of(" \n\r\t") + 1);
@@ -90,19 +159,23 @@ double calc_matches (const Species& species1, const Species& species2, const int
         const vector<Word>& spacedWords1 = species1.sorted_words[currentPattern];
         const vector<Word>& spacedWords2 = species2.sorted_words[currentPattern];
         const vector<char>& pattern = patterns[currentPattern];
+        const vector<int> positions = dontcare_positions(pattern);
+        const vector<int> run_lengths1 = key_run_lengths(spacedWords1);
+        const vector<int> run_lengths2 = key_run_lengths(spacedWords2);
         for (unsigned int i = 0; i < spacedWords1.size(); ++i) {
-            int bl1 = multiMatch(spacedWords1, i);
+            int bl1 = run_lengths1[i];
             if (bl1 > 1) {
-                vector<int> best = {threshold - 1, 0};
+                int best_score = threshold - 1;
+                int best_mismatches = 0;
                 unsigned int limit1 = i + bl1 - 1;
-                for (i; i <= limit1; ++i) {
+                for (; i <= limit1; ++i) {
                     bool singleMatch = true;
-                    for (unsigned int j = 0 + skip; j < spacedWords2.size() && singleMatch; ++j) {
-                        int bl2 = multiMatch(spacedWords2, j);
+                    for (unsigned int j = skip; j < spacedWords2.size() && singleMatch; ++j) {
+                        int bl2 = run_lengths2[j];
                         if (bl2 > 1) {
                             singleMatch = false;
                             unsigned int limit2 = j + bl2 - 1;
-                            for (j; j <= limit2; ++j) {
+                            for (; j <= limit2; ++j) {
                                 score = 0;
                                 mismatches = 0;
                                 if (spacedWords1[i].key > spacedWords2[j].key) {
@@ -113,18 +186,14 @@ double calc_matches (const Species& species1, const Species& species2, const int
                                     break;
                                 }
                                 if (spacedWords1[i].key == spacedWords2[j].key) {
-                                    for (unsigned int pat = 0; pat < pattern.size(); ++pat) {
-                                        if (pattern[pat] == '0') {
-                                            score += blosum62[ (int) sequence1[spacedWords1[i].pos + pat] ][ (int) sequence2[spacedWords2[j].pos + pat] ];
-                                            if ( (int) sequence1[spacedWords1[i].pos + pat] != (int) sequence2[spacedWords2[j].pos + pat]) {
-                                                ++mismatches;
-                                            }
-                                        }
-                                    }
+                                    score_dontcare_positions(sequence1, sequence2,
+                                                             spacedWords1[i].pos,
+                                                             spacedWords2[j].pos,
+                                                             positions, score, mismatches);
                                 }
-                                if (score >= threshold && score > best[0]) {
-                                    best[0] = score;
-                                    best[1] = mismatches;
+                                if (score >= threshold && score > best_score) {
+                                    best_score = score;
+                                    best_mismatches = mismatches;
                                 }
                                 if (i == limit1 && j == limit2) {
                                     skip += bl2;
@@ -144,17 +213,13 @@ double calc_matches (const Species& species1, const Species& species2, const int
                             if (spacedWords1[i].key == spacedWords2[j].key) {
                                 score = 0;
                                 mismatches = 0;
-                                for (unsigned int pat = 0; pat < pattern.size(); ++pat) {
-                                    if (pattern[pat] == '0') {
-                                        score += blosum62[ (int) sequence1[spacedWords1[i].pos + pat] ][ (int) sequence2[spacedWords2[j].pos + pat] ];
-                                        if ( (int) sequence1[spacedWords1[i].pos + pat] != (int) sequence2[spacedWords2[j].pos + pat]) {
-                                            ++mismatches;
-                                        }
-                                    }
-                                }
-                                if (score >= threshold && score > best[0]) {
-                                    best[0] = score;
-                                    best[1] = mismatches;
+                                score_dontcare_positions(sequence1, sequence2,
+                                                         spacedWords1[i].pos,
+                                                         spacedWords2[j].pos,
+                                                         positions, score, mismatches);
+                                if (score >= threshold && score > best_score) {
+                                    best_score = score;
+                                    best_mismatches = mismatches;
                                 }
                                 if (i == limit1) {
                                     skip = j + 1;
@@ -167,16 +232,16 @@ double calc_matches (const Species& species1, const Species& species2, const int
                     }
                 }
                 if (outputScores) {
-                    auto exists = scores.find(best[0]);
+                    auto exists = scores.find(best_score);
                     if (exists != scores.end() ) {
-                        scores[best[0]] += 1;
+                        scores[best_score] += 1;
                     }
-                    else if (best[0]){
-                        scores.insert(pair<int, int>(best[0], 1));
+                    else if (best_score){
+                        scores.insert(pair<int, int>(best_score, 1));
                     }
                 }
-                if (best[0] >= threshold) {
-                    total_mismatches += best[1];
+                if (best_score >= threshold) {
+                    total_mismatches += best_mismatches;
                     total_dc += dc;
                 }
                 if (bl1 > 1 && multi_done) {
@@ -186,13 +251,14 @@ double calc_matches (const Species& species1, const Species& species2, const int
             }
             else {
                 bool go_on = true;
-                for (unsigned int j = 0 + skip; j < spacedWords2.size() && go_on; ++j) {
-                    int bl2 = multiMatch(spacedWords2, j);
+                for (unsigned int j = skip; j < spacedWords2.size() && go_on; ++j) {
+                    int bl2 = run_lengths2[j];
                     if (bl2 > 1) {
                         go_on = false;
-                        vector<int> best = {threshold - 1, 0};
+                        int best_score = threshold - 1;
+                        int best_mismatches = 0;
                         unsigned int limit = j + bl2 - 1;
-                        for (j; j <= limit; ++j) {
+                        for (; j <= limit; ++j) {
                             score = 0;
                             mismatches = 0;
                             if (spacedWords1[i].key > spacedWords2[j].key) {
@@ -203,30 +269,26 @@ double calc_matches (const Species& species1, const Species& species2, const int
                                 break;
                             }
                             if (spacedWords1[i].key == spacedWords2[j].key) {
-                                for (unsigned int pat = 0; pat < pattern.size(); ++pat) {
-                                    if (pattern[pat] == '0') {
-                                        score += blosum62[ (int) sequence1[spacedWords1[i].pos + pat] ][ (int) sequence2[spacedWords2[j].pos + pat] ];
-                                        if ( (int) sequence1[spacedWords1[i].pos + pat] != (int) sequence2[spacedWords2[j].pos + pat]) {
-                                            ++mismatches;
-                                        }
-                                    }
-                                }
-                                if (score >= threshold && score > best[0]) {
-                                    best[0] = score;
-                                    best[1] = mismatches;
+                                score_dontcare_positions(sequence1, sequence2,
+                                                         spacedWords1[i].pos,
+                                                         spacedWords2[j].pos,
+                                                         positions, score, mismatches);
+                                if (score >= threshold && score > best_score) {
+                                    best_score = score;
+                                    best_mismatches = mismatches;
                                 }
                                 if (j == limit) {
                                     if (outputScores) {
-                                        auto exists = scores.find(best[0]);
+                                        auto exists = scores.find(best_score);
                                         if (exists != scores.end() ) {
-                                            scores[best[0]] += 1;
+                                            scores[best_score] += 1;
                                         }
                                         else {
-                                            scores.insert(pair<int, int>(best[0], 1));
+                                            scores.insert(pair<int, int>(best_score, 1));
                                         }
                                     }
-                                    if (best[0] > threshold) {
-                                        total_mismatches += best[1];
+                                    if (best_score > threshold) {
+                                        total_mismatches += best_mismatches;
                                         total_dc += dc;
                                     }
                                     skip += bl2;
@@ -246,14 +308,10 @@ double calc_matches (const Species& species1, const Species& species2, const int
                             skip = j + 1;
                             score = 0;
                             mismatches = 0;
-                            for (unsigned int pat = 0; pat < pattern.size(); ++pat) {
-                                if (pattern[pat] == '0') {
-                                    score += blosum62[ (int) sequence1[spacedWords1[i].pos + pat] ][ (int) sequence2[spacedWords2[j].pos + pat] ];
-                                    if ( (int) sequence1[spacedWords1[i].pos + pat] != (int) sequence2[spacedWords2[j].pos + pat]) {
-                                        ++mismatches;
-                                    }
-                                }
-                            }
+                            score_dontcare_positions(sequence1, sequence2,
+                                                     spacedWords1[i].pos,
+                                                     spacedWords2[j].pos,
+                                                     positions, score, mismatches);
                             if (outputScores) {
                                 auto exists = scores.find(score);
                                 if (exists != scores.end() ) {
