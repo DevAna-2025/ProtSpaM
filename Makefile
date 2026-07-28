@@ -1,4 +1,4 @@
-CC = g++ -fopenmp
+CC = g++
 IDIR = ./include
 CFLAGS = -c -Wall -std=c++11 -I $(IDIR) -O3
 OBJDIR = ./obj/
