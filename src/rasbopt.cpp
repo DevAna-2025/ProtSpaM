@@ -1,4 +1,5 @@
 #include "rasbopt.hpp"
+#include <cstdint>
 
 namespace rasb_opt{
     std::string OutFile = "rasbhari_set.pat";
