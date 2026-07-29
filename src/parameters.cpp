@@ -1,5 +1,6 @@
 #include "parameters.h"
 #include <vector>
+#include <cstdint>
 
 using namespace std;
 
@@ -29,7 +30,7 @@ void printHelp(){
 	cout << help << endl;
 }
 
-void parseParameters(int argc, char *argv[], int& weight, int& dc, int& threshold, int& patterns, int& threads,
+void parseParameters(int argc, char *argv[], int& weight, int& dc, int& threshold, int& patterns,
                      vector<string>& inputFileNames, string& output, bool& savePatterns, string& loadPatterns, bool& outputScores) {
 	int option_char;
 	 while ((option_char = getopt (argc, argv, "w:d:s:m:t:l:o:zrp:h")) != -1) {
@@ -57,22 +58,19 @@ void parseParameters(int argc, char *argv[], int& weight, int& dc, int& threshol
 					std::cerr << "Number of patterns '-m' must be an integer between 1 and 10"<< std::endl;
 				}
 				break;
-			case 't':
-				threads = atoi (optarg);
-				if (threads < 1) {
-					std::cerr << "threads '-t' must be an integer larger than 0"<< std::endl;
-					exit (EXIT_FAILURE);
-				}
-				break;
             case 'l': {
                 std::ifstream infile(optarg);
                 if (!infile.good()) {
                     cerr << "Error opening inputfiles-list: '" << optarg << "'. Bailing out.\n";
                 }
                 std::string line;
-                while (!infile.eof()) {
-                    std::getline(infile, line, '\n');
-                    inputFileNames.push_back(line);
+                while (std::getline(infile, line)) {
+                    if (!line.empty() && line.back() == '\r') {
+                        line.pop_back();
+                    }
+                    if (!line.empty()) {
+                        inputFileNames.push_back(line);
+                    }
                 }
                 break;
             }
@@ -100,13 +98,12 @@ void parseParameters(int argc, char *argv[], int& weight, int& dc, int& threshol
 	}
 }
 
-void printParameters(int& weight, int& dc, int& threshold, int& patterns, int& threads, string& output) {
+void printParameters(int& weight, int& dc, int& threshold, int& patterns, string& output) {
     cout << "-----Parameters used------\n";
     cout << "Weight: " << weight << endl;
     cout << "Number of don't-care positions: " << dc << endl;
     cout << "Threshold: " << threshold << endl;
     cout << "Number of patterns: " << patterns << endl;
-    cout << "Number of threads: " << threads << endl;
     cout << "Filename for distance matrix: " << output << endl;
     cout << "--------------------------\n";
 }
